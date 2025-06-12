@@ -1,0 +1,79 @@
+import { CreateShippingAddressDto } from './dto/create-shipping-address.dto';
+import { UpdateShippingAddressDto } from './dto/update-shipping-address.dto';
+import { PrismaService } from 'prisma/prisma.service';
+export declare class ShippingAddressService {
+    private prisma;
+    constructor(prisma: PrismaService);
+    create(userId: number, dto: CreateShippingAddressDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: number;
+            userId: number;
+            fullName: string;
+            phone: string;
+            address: string;
+            ward: string | null;
+            district: string | null;
+            province: string | null;
+            isDefault: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    findAll(userId: number): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: number;
+            userId: number;
+            fullName: string;
+            phone: string;
+            address: string;
+            ward: string | null;
+            district: string | null;
+            province: string | null;
+            isDefault: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+    }>;
+    findByUserId(userId: number): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: number;
+            userId: number;
+            fullName: string;
+            phone: string;
+            address: string;
+            ward: string | null;
+            district: string | null;
+            province: string | null;
+            isDefault: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        }[];
+    }>;
+    update(id: number, userId: number, dto: UpdateShippingAddressDto): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            id: number;
+            userId: number;
+            fullName: string;
+            phone: string;
+            address: string;
+            ward: string | null;
+            district: string | null;
+            province: string | null;
+            isDefault: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+    }>;
+    remove(id: number, userId: number): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+}

@@ -1,0 +1,330 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     Int               @id @default(autoincrement())
+  name                   String
+  email                  String            @unique
+  password               String?
+  role                   String            @default("customer")
+  phoneNumber            String?
+  gender                 String?
+  profilePicture         String?
+  profilePicturePublicId String?
+  isActive               Boolean           @default(true)
+  type_account           String            @default("normal")
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  ratings                Rating[]
+  likedBlogs             Blog[]            @relation("BlogLikes")
+  dislikedBlogs          Blog[]            @relation("BlogDislikes")
+  blogsCreated           Blog[]            @relation("CreatedBlogs")
+  shippingAddresses      ShippingAddress[]
+  orders                 Order[]
+}
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  title     String    @unique
+  slug      String    @unique
+  image     String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Brand {
+  id        Int       @id @default(autoincrement())
+  title     String    @unique
+  image     String?
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Size {
+  id        Int           @id @default(autoincrement())
+  title     String        @unique
+  products  ProductSize[]
+  variants  VariantSize[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  OrderItem OrderItem[]
+}
+
+model Color {
+  id        Int         @id @default(autoincrement())
+  title     String      @unique
+  code      String
+  products  Product[]
+  variants  Variant[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  OrderItem OrderItem[]
+}
+
+model Coupon {
+  id            Int      @id @default(autoincrement())
+  title         String
+  code          String   @unique
+  discount      Float
+  expiresAt     DateTime
+  usageLimit    Int
+  usedCount     Int      @default(0)
+  minOrderValue Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  Order         Order[]
+}
+
+model Shipping {
+  id           Int      @id @default(autoincrement())
+  provinceName String   @unique
+  fee          Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  orders        Order[]  @relation("ShippingToOrder")
+}
+
+model Config {
+  id        Int      @id @default(autoincrement())
+  name      String?
+  email     String?
+  mobile    String?
+  address   String?
+  googlemap String?
+  facebook  String?
+  zalo      String?
+  instagram String?
+  tiktok    String?
+  youtube   String?
+  x         String?
+  linkedin  String?
+  logo      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Store {
+  id        Int      @id @default(autoincrement())
+  name      String
+  image     String?
+  address   String
+  mobile    String
+  link      String
+  iframe    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  title         String
+  slug          String   @unique
+  description   String
+  code          String
+  thumb         String
+  price         Float
+  discount      Float
+  sold          Int      @default(0)
+  status        String   @default("Còn hàng")
+  averageRating Float    @default(0) // ⭐ Trung bình sao
+  ratingCount   Int      @default(0) // 💬 Số lượng đánh giá
+  tags          String[]
+  images        String[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  brandId Int?
+  brand   Brand? @relation(fields: [brandId], references: [id])
+
+  categoryId Int?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  colorId Int?
+  color   Color? @relation(fields: [colorId], references: [id])
+
+  size ProductSize[]
+
+  variants Variant[]
+
+  ratings   Rating[]
+  OrderItem OrderItem[]
+}
+
+model Variant {
+  id        Int      @id @default(autoincrement())
+  title     String
+  price     Float
+  discount  Float
+  thumb     String
+  images    String[]
+  sku       String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  colorId Int?
+  color   Color? @relation(fields: [colorId], references: [id])
+
+  sizes     VariantSize[]
+  OrderItem OrderItem[]
+}
+
+model ProductSize {
+  productId Int
+  sizeId    Int
+
+  product Product @relation(fields: [productId], references: [id])
+  size    Size    @relation(fields: [sizeId], references: [id])
+
+  @@id([productId, sizeId])
+}
+
+model VariantSize {
+  variantId Int
+  sizeId    Int
+
+  variant Variant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  size    Size    @relation(fields: [sizeId], references: [id], onDelete: Cascade)
+
+  @@id([variantId, sizeId])
+}
+
+model Rating {
+  id         Int      @id @default(autoincrement())
+  star       Int
+  comment    String
+  postedBy   User     @relation(fields: [postedById], references: [id])
+  postedById Int
+  product    Product  @relation(fields: [productId], references: [id])
+  productId  Int
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+}
+
+model Blog {
+  id          Int          @id @default(autoincrement())
+  title       String
+  slug        String       @unique
+  description String
+  thumb       String?
+  content     Json
+  categoryId  Int
+  category    BlogCategory @relation(fields: [categoryId], references: [id])
+  numberViews Int          @default(0)
+
+  likes       User[]  @relation("BlogLikes")
+  dislikes    User[]  @relation("BlogDislikes")
+  isPublished Boolean @default(false)
+
+  createdById Int?
+  createdBy   User? @relation("CreatedBlogs", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogCategory {
+  id        Int      @id @default(autoincrement())
+  title     String   @unique
+  slug      String   @unique
+  image     String?
+  blogs     Blog[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ShippingAddress {
+  id        Int     @id @default(autoincrement())
+  userId    Int
+  fullName  String // Tên người nhận
+  phone     String
+  address   String // Địa chỉ cụ thể (VD: 123 Đường ABC, Phường X, Quận Y)
+  ward      String? // Phường/xã (nếu bạn muốn chi tiết hơn)
+  district  String? // Quận/huyện
+  province  String? // Tỉnh/thành
+  isDefault Boolean @default(false) // Có phải địa chỉ mặc định không
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id])
+  orders Order[]
+}
+
+model Order {
+  id                Int  @id @default(autoincrement())
+  userId            Int
+  shippingAddressId Int
+  couponId          Int?
+  shippingId        Int?
+  shippingFee       Float?
+
+  user            User            @relation(fields: [userId], references: [id])
+  shippingAddress ShippingAddress @relation(fields: [shippingAddressId], references: [id])
+  coupon          Coupon?         @relation(fields: [couponId], references: [id])
+  shipping        Shipping?       @relation("ShippingToOrder", fields: [shippingId], references: [id], onDelete: SetNull)
+  items           OrderItem[]
+
+  status        String  @default("pending") // 'pending' | 'paid' | 'shipping' | 'completed' | 'cancelled'
+  paymentMethod String  @default("COD") // 'COD' | 'VNPay' | 'Momo' | etc.
+  note          String?
+
+  totalAmount    Float
+  discountAmount Float @default(0)
+  finalAmount    Float
+
+  cancelReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderItem {
+  id        Int  @id @default(autoincrement())
+  orderId   Int
+  productId Int? // Cho product KHÔNG có variant
+  variantId Int? // Cho product CÓ variant
+  sizeId    Int?
+  colorId   Int?
+
+  quantity Int
+  price    Float // Giá tại thời điểm đặt
+  discount Float @default(0)
+
+  order   Order    @relation(fields: [orderId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+  variant Variant? @relation(fields: [variantId], references: [id])
+  size    Size?    @relation(fields: [sizeId], references: [id])
+  color   Color?   @relation(fields: [colorId], references: [id])
+}
+
+model Contact {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255) 
+  email     String   @db.VarChar(255) 
+  mobile    String?  @db.VarChar(20) 
+  comment   String   @db.Text        
+  status    String   @default("PENDING")
+  type      String  @default("CONTACT") 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+

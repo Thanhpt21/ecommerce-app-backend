@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "OrderItem" ADD COLUMN     "colorId" INTEGER,
+ADD COLUMN     "discount" DOUBLE PRECISION NOT NULL DEFAULT 0;
+
+-- AddForeignKey
+ALTER TABLE "OrderItem" ADD CONSTRAINT "OrderItem_colorId_fkey" FOREIGN KEY ("colorId") REFERENCES "Color"("id") ON DELETE SET NULL ON UPDATE CASCADE;
