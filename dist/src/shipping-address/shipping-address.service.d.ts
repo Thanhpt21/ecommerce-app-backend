@@ -9,16 +9,16 @@ export declare class ShippingAddressService {
         message: string;
         data: {
             id: number;
-            userId: number;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string;
             fullName: string;
             phone: string;
-            address: string;
             ward: string | null;
             district: string | null;
             province: string | null;
             isDefault: boolean;
-            createdAt: Date;
-            updatedAt: Date;
+            userId: number;
         };
     }>;
     findAll(userId: number): Promise<{
@@ -26,16 +26,16 @@ export declare class ShippingAddressService {
         message: string;
         data: {
             id: number;
-            userId: number;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string;
             fullName: string;
             phone: string;
-            address: string;
             ward: string | null;
             district: string | null;
             province: string | null;
             isDefault: boolean;
-            createdAt: Date;
-            updatedAt: Date;
+            userId: number;
         }[];
     }>;
     findByUserId(userId: number): Promise<{
@@ -43,16 +43,16 @@ export declare class ShippingAddressService {
         message: string;
         data: {
             id: number;
-            userId: number;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string;
             fullName: string;
             phone: string;
-            address: string;
             ward: string | null;
             district: string | null;
             province: string | null;
             isDefault: boolean;
-            createdAt: Date;
-            updatedAt: Date;
+            userId: number;
         }[];
     }>;
     update(id: number, userId: number, dto: UpdateShippingAddressDto): Promise<{
@@ -60,16 +60,16 @@ export declare class ShippingAddressService {
         message: string;
         data: {
             id: number;
-            userId: number;
+            createdAt: Date;
+            updatedAt: Date;
+            address: string;
             fullName: string;
             phone: string;
-            address: string;
             ward: string | null;
             district: string | null;
             province: string | null;
             isDefault: boolean;
-            createdAt: Date;
-            updatedAt: Date;
+            userId: number;
         };
     }>;
     remove(id: number, userId: number): Promise<{

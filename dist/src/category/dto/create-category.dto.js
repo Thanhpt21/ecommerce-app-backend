@@ -10,11 +10,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateCategoryDto = void 0;
+const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
 class CreateCategoryDto {
     title;
     slug;
     image;
+    parentId;
 }
 exports.CreateCategoryDto = CreateCategoryDto;
 __decorate([
@@ -24,7 +26,7 @@ __decorate([
 ], CreateCategoryDto.prototype, "title", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateCategoryDto.prototype, "slug", void 0);
 __decorate([
@@ -32,4 +34,18 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], CreateCategoryDto.prototype, "image", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (value === '' || value === 0) {
+            return null;
+        }
+        return value;
+    }),
+    (0, class_validator_1.ValidateIf)((obj) => obj.parentId !== null),
+    (0, class_validator_1.IsInt)({ message: 'Parent ID phải là số nguyên.' }),
+    (0, class_validator_1.Min)(1, { message: 'Parent ID phải lớn hơn hoặc bằng 1.' }),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Object)
+], CreateCategoryDto.prototype, "parentId", void 0);
 //# sourceMappingURL=create-category.dto.js.map

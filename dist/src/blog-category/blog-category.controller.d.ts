@@ -8,24 +8,24 @@ export declare class BlogCategoryController {
         success: boolean;
         message: string;
         data: {
-            id: number;
-            title: string;
-            slug: string;
             image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
         };
     }>;
     findAll(page?: number, limit?: number, search?: string): Promise<{
         success: boolean;
         message: string;
         data: {
-            id: number;
-            title: string;
-            slug: string;
             image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
         }[];
         total: number;
         page: number;
@@ -35,36 +35,36 @@ export declare class BlogCategoryController {
         success: boolean;
         message: string;
         data: {
-            id: number;
-            title: string;
-            slug: string;
             image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
         }[];
     }>;
     findOne(id: string): Promise<{
         success: boolean;
         message: string;
         data: {
-            id: number;
-            title: string;
-            slug: string;
             image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
         };
     }>;
     update(id: string, dto: UpdateBlogCategoryDto, file: Express.Multer.File): Promise<{
         success: boolean;
         message: string;
         data: {
-            id: number;
-            title: string;
-            slug: string;
             image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
         };
     }>;
     remove(id: string): Promise<{

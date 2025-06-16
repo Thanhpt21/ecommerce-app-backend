@@ -24,15 +24,32 @@ let CategoryService = class CategoryService {
     }
     async create(dto, file) {
         const slug = (0, slugify_1.default)(dto.title, { lower: true, strict: true });
-        let image = dto.image;
-        if (file) {
-            const { secure_url, public_id } = await this.uploadService.uploadImage(file, 0, 'category');
-            image = secure_url;
+        let imageUrl = dto.image;
+        if (dto.parentId) {
+            const parentCategory = await this.prisma.category.findUnique({ where: { id: dto.parentId } });
+            if (!parentCategory) {
+                throw new common_1.NotFoundException(`Danh mục cha với ID ${dto.parentId} không tìm thấy.`);
+            }
         }
-        const newCategory = await this.prisma.category.create({ data: { ...dto, slug, image } });
+        const existingCategory = await this.prisma.category.findUnique({ where: { slug } });
+        if (existingCategory) {
+            throw new common_1.BadRequestException(`Danh mục với slug '${slug}' đã tồn tại.`);
+        }
+        if (file) {
+            const { secure_url } = await this.uploadService.uploadImage(file, 0, 'category');
+            imageUrl = secure_url;
+        }
+        const newCategory = await this.prisma.category.create({
+            data: {
+                title: dto.title,
+                slug,
+                image: imageUrl,
+                parentId: dto.parentId,
+            },
+        });
         return {
             success: true,
-            message: 'Category created successfully',
+            message: 'Danh mục đã được tạo thành công',
             data: newCategory,
         };
     }
@@ -52,6 +69,9 @@ let CategoryService = class CategoryService {
                 skip,
                 take: limit,
                 orderBy: { createdAt: 'desc' },
+                include: {
+                    subCategories: true,
+                },
             }),
             this.prisma.category.count({ where: whereClause }),
         ]);
@@ -76,6 +96,9 @@ let CategoryService = class CategoryService {
         const categories = await this.prisma.category.findMany({
             where: whereClause,
             orderBy: { createdAt: 'desc' },
+            include: {
+                subCategories: true,
+            },
         });
         return {
             success: true,
@@ -87,7 +110,12 @@ let CategoryService = class CategoryService {
         };
     }
     async findOne(id) {
-        const category = await this.prisma.category.findUnique({ where: { id } });
+        const category = await this.prisma.category.findUnique({
+            where: { id },
+            include: {
+                subCategories: true,
+            },
+        });
         if (!category)
             throw new common_1.NotFoundException('Category not found');
         return {
@@ -99,24 +127,53 @@ let CategoryService = class CategoryService {
     async update(id, dto, file) {
         const category = await this.prisma.category.findUnique({ where: { id } });
         if (!category) {
-            throw new common_1.NotFoundException('Category not found');
+            throw new common_1.NotFoundException('Không tìm thấy danh mục.');
         }
-        const updateData = { ...dto };
-        if (dto.slug !== undefined) {
-            updateData.slug = dto.slug;
+        const { parentId, ...restDto } = dto;
+        const updateData = { ...restDto };
+        const isTitleChanged = restDto.title !== undefined && restDto.title !== category.title;
+        const isSlugManuallyChanged = restDto.slug !== undefined && restDto.slug !== category.slug;
+        if (isSlugManuallyChanged) {
+            updateData.slug = restDto.slug;
         }
-        else if (dto.title) {
-            const newSlug = (0, slugify_1.default)(dto.title, { lower: true, strict: true });
-            updateData.slug = newSlug;
+        else if (isTitleChanged) {
+            if (typeof restDto.title === 'string') {
+                updateData.slug = (0, slugify_1.default)(restDto.title, { lower: true, strict: true });
+            }
+            else {
+                console.error("Logic error: restDto.title is not a string when isTitleChanged is true.");
+                throw new common_1.InternalServerErrorException("Lỗi logic nội bộ khi tạo slug.");
+            }
+        }
+        if (updateData.slug !== undefined && updateData.slug !== category.slug) {
             const existingCategoryWithSlug = await this.prisma.category.findUnique({
-                where: { slug: newSlug },
+                where: { slug: updateData.slug },
             });
             if (existingCategoryWithSlug && existingCategoryWithSlug.id !== id) {
-                throw new common_1.BadRequestException(`Category with slug '${newSlug}' already exists.`);
+                throw new common_1.BadRequestException(`Danh mục với slug '${updateData.slug}' đã tồn tại.`);
+            }
+        }
+        if (parentId !== undefined) {
+            if (parentId === id) {
+                throw new common_1.BadRequestException('Một danh mục không thể là cha của chính nó.');
+            }
+            if (parentId !== null) {
+                const parentCategory = await this.prisma.category.findUnique({ where: { id: parentId } });
+                if (!parentCategory) {
+                    throw new common_1.NotFoundException(`Danh mục cha với ID ${parentId} không tìm thấy.`);
+                }
+                const isDescendant = await this.isDescendant(id, parentId);
+                if (isDescendant) {
+                    throw new common_1.BadRequestException('Không thể đặt danh mục này làm cha vì nó là danh mục con của danh mục hiện tại.');
+                }
+                updateData.parent = { connect: { id: parentId } };
+            }
+            else {
+                updateData.parent = { disconnect: true };
             }
         }
         if (file) {
-            const currentPublicId = (0, file_util_1.extractPublicId)(category.image);
+            const currentPublicId = category.image ? (0, file_util_1.extractPublicId)(category.image) : null;
             if (currentPublicId) {
                 await this.uploadService.deleteImage(currentPublicId);
             }
@@ -129,14 +186,32 @@ let CategoryService = class CategoryService {
         });
         return {
             success: true,
-            message: 'Category updated successfully',
+            message: 'Danh mục đã được cập nhật thành công',
             data: updatedCategory,
         };
+    }
+    async isDescendant(ancestorId, childId) {
+        if (ancestorId === childId)
+            return true;
+        let current = await this.prisma.category.findUnique({ where: { id: childId } });
+        while (current && current.parentId !== null) {
+            if (current.parentId === ancestorId) {
+                return true;
+            }
+            current = await this.prisma.category.findUnique({ where: { id: current.parentId } });
+        }
+        return false;
     }
     async remove(id) {
         const category = await this.prisma.category.findUnique({ where: { id } });
         if (!category) {
             throw new common_1.NotFoundException('Category not found');
+        }
+        const hasChildren = await this.prisma.category.count({
+            where: { parentId: id },
+        });
+        if (hasChildren > 0) {
+            throw new common_1.BadRequestException('Cannot delete category with existing subcategories. Please delete subcategories first.');
         }
         const publicId = (0, file_util_1.extractPublicId)(category.image);
         if (publicId) {

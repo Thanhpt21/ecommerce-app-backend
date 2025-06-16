@@ -14,9 +14,9 @@ export declare class ProductController {
             size: ({
                 size: {
                     id: number;
-                    title: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    title: string;
                 };
             } & {
                 productId: number;
@@ -24,24 +24,24 @@ export declare class ProductController {
             })[];
         } & {
             id: number;
-            title: string;
-            slug: string;
-            description: string;
-            code: string;
-            thumb: string;
-            price: number;
-            discount: number;
-            sold: number;
-            status: string;
-            averageRating: number;
-            ratingCount: number;
-            tags: string[];
-            images: string[];
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
+            code: string;
+            discount: number;
+            description: string;
+            price: number;
+            status: string;
+            tags: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
+            thumb: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         }) | null;
     }>;
     update(id: string, dto: UpdateProductDto, files: {
@@ -53,40 +53,40 @@ export declare class ProductController {
         data: {
             sizes: {
                 id: number;
-                title: string;
                 createdAt: Date;
                 updatedAt: Date;
+                title: string;
             }[];
             size: ({
                 size: {
                     id: number;
-                    title: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    title: string;
                 };
             } & {
                 productId: number;
                 sizeId: number;
             })[];
             id: number;
-            title: string;
-            slug: string;
-            description: string;
-            code: string;
-            thumb: string;
-            price: number;
-            discount: number;
-            sold: number;
-            status: string;
-            averageRating: number;
-            ratingCount: number;
-            tags: string[];
-            images: string[];
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
+            code: string;
+            discount: number;
+            description: string;
+            price: number;
+            status: string;
+            tags: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
+            thumb: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         };
     }>;
     findAll(page?: number, limit?: number, search?: string, categoryId?: string, brandId?: string, colorId?: string, sortBy?: string, price_gte?: string, price_lte?: string): Promise<{
@@ -108,22 +108,22 @@ export declare class ProductController {
                     code: string;
                 } | null;
                 id: number;
-                title: string;
-                thumb: string;
-                price: number;
-                discount: number;
-                images: string[];
                 createdAt: Date;
                 updatedAt: Date;
+                title: string;
+                discount: number;
+                price: number;
                 colorId: number | null;
+                thumb: string;
+                images: string[];
                 productId: number;
                 sku: string;
             }[];
-            brand: {
+            category: {
                 id: number;
                 title: string;
             } | null;
-            category: {
+            brand: {
                 id: number;
                 title: string;
             } | null;
@@ -134,10 +134,10 @@ export declare class ProductController {
             } | null;
             ratings: ({
                 postedBy: {
-                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
+                    id: number;
                 };
             } & {
                 id: number;
@@ -149,24 +149,24 @@ export declare class ProductController {
                 postedById: number;
             })[];
             id: number;
-            title: string;
-            slug: string;
-            description: string;
-            code: string;
-            thumb: string;
-            price: number;
-            discount: number;
-            sold: number;
-            status: string;
-            averageRating: number;
-            ratingCount: number;
-            tags: string[];
-            images: string[];
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
+            code: string;
+            discount: number;
+            description: string;
+            price: number;
+            status: string;
+            tags: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
+            thumb: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         }[];
         total: number;
         page: number;
@@ -191,22 +191,22 @@ export declare class ProductController {
                     code: string;
                 } | null;
                 id: number;
-                title: string;
-                thumb: string;
-                price: number;
-                discount: number;
-                images: string[];
                 createdAt: Date;
                 updatedAt: Date;
+                title: string;
+                discount: number;
+                price: number;
                 colorId: number | null;
+                thumb: string;
+                images: string[];
                 productId: number;
                 sku: string;
             }[];
-            brand: {
+            category: {
                 id: number;
                 title: string;
             } | null;
-            category: {
+            brand: {
                 id: number;
                 title: string;
             } | null;
@@ -217,10 +217,10 @@ export declare class ProductController {
             } | null;
             ratings: ({
                 postedBy: {
-                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
+                    id: number;
                 };
             } & {
                 id: number;
@@ -232,24 +232,24 @@ export declare class ProductController {
                 postedById: number;
             })[];
             id: number;
-            title: string;
-            slug: string;
-            description: string;
-            code: string;
-            thumb: string;
-            price: number;
-            discount: number;
-            sold: number;
-            status: string;
-            averageRating: number;
-            ratingCount: number;
-            tags: string[];
-            images: string[];
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
+            code: string;
+            discount: number;
+            description: string;
+            price: number;
+            status: string;
+            tags: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
+            thumb: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         }[];
     }>;
     findOne(id: number): Promise<{
@@ -271,22 +271,22 @@ export declare class ProductController {
                     code: string;
                 } | null;
                 id: number;
-                title: string;
-                thumb: string;
-                price: number;
-                discount: number;
-                images: string[];
                 createdAt: Date;
                 updatedAt: Date;
+                title: string;
+                discount: number;
+                price: number;
                 colorId: number | null;
+                thumb: string;
+                images: string[];
                 productId: number;
                 sku: string;
             }[];
-            brand: {
+            category: {
                 id: number;
                 title: string;
             } | null;
-            category: {
+            brand: {
                 id: number;
                 title: string;
             } | null;
@@ -297,10 +297,10 @@ export declare class ProductController {
             } | null;
             ratings: ({
                 postedBy: {
-                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
+                    id: number;
                 };
             } & {
                 id: number;
@@ -312,21 +312,21 @@ export declare class ProductController {
                 postedById: number;
             })[];
             id: number;
-            title: string;
-            slug: string;
-            description: string;
-            code: string;
-            thumb: string;
-            price: number;
-            discount: number;
-            sold: number;
-            status: string;
-            averageRating: number;
-            ratingCount: number;
-            tags: string[];
-            images: string[];
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
+            code: string;
+            discount: number;
+            description: string;
+            price: number;
+            status: string;
+            tags: string[];
+            thumb: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         };
     }>;
     findOneBySlug(slug: string): Promise<{
@@ -348,22 +348,22 @@ export declare class ProductController {
                     code: string;
                 } | null;
                 id: number;
-                title: string;
-                thumb: string;
-                price: number;
-                discount: number;
-                images: string[];
                 createdAt: Date;
                 updatedAt: Date;
+                title: string;
+                discount: number;
+                price: number;
                 colorId: number | null;
+                thumb: string;
+                images: string[];
                 productId: number;
                 sku: string;
             }[];
-            brand: {
+            category: {
                 id: number;
                 title: string;
             } | null;
-            category: {
+            brand: {
                 id: number;
                 title: string;
             } | null;
@@ -374,10 +374,10 @@ export declare class ProductController {
             } | null;
             ratings: ({
                 postedBy: {
-                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
+                    id: number;
                 };
             } & {
                 id: number;
@@ -389,21 +389,21 @@ export declare class ProductController {
                 postedById: number;
             })[];
             id: number;
-            title: string;
-            slug: string;
-            description: string;
-            code: string;
-            thumb: string;
-            price: number;
-            discount: number;
-            sold: number;
-            status: string;
-            averageRating: number;
-            ratingCount: number;
-            tags: string[];
-            images: string[];
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
+            code: string;
+            discount: number;
+            description: string;
+            price: number;
+            status: string;
+            tags: string[];
+            thumb: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         };
     } | {
         success: boolean;
@@ -449,25 +449,25 @@ export declare class ProductController {
                     code: string;
                 } | null;
                 id: number;
-                title: string;
-                thumb: string;
-                price: number;
-                discount: number;
-                images: string[];
                 createdAt: Date;
                 updatedAt: Date;
+                title: string;
+                discount: number;
+                price: number;
                 colorId: number | null;
+                thumb: string;
+                images: string[];
                 productId: number;
                 sku: string;
             }[];
-            brand: {
-                id: number;
-                title: string;
-            } | null;
             category: {
                 id: number;
                 title: string;
                 slug: string;
+            } | null;
+            brand: {
+                id: number;
+                title: string;
             } | null;
             color: {
                 id: number;
@@ -476,10 +476,10 @@ export declare class ProductController {
             } | null;
             ratings: ({
                 postedBy: {
-                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
+                    id: number;
                 };
             } & {
                 id: number;
@@ -491,24 +491,24 @@ export declare class ProductController {
                 postedById: number;
             })[];
             id: number;
-            title: string;
-            slug: string;
-            description: string;
-            code: string;
-            thumb: string;
-            price: number;
-            discount: number;
-            sold: number;
-            status: string;
-            averageRating: number;
-            ratingCount: number;
-            tags: string[];
-            images: string[];
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
+            code: string;
+            discount: number;
+            description: string;
+            price: number;
+            status: string;
+            tags: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
+            thumb: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         }[];
         total: number;
         page: number;

@@ -9,17 +9,17 @@ export declare class BlogController {
         message: string;
         data: {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             title: string;
             slug: string;
             description: string;
+            categoryId: number;
             thumb: string | null;
             content: import("@prisma/client/runtime/library").JsonValue;
-            categoryId: number;
-            numberViews: number;
             isPublished: boolean;
+            numberViews: number;
             createdById: number | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     }>;
     findAll(page?: number, limit?: number, search?: string, categoryId?: string): Promise<{
@@ -27,30 +27,30 @@ export declare class BlogController {
         message: string;
         data: ({
             category: {
+                image: string | null;
                 id: number;
                 title: string;
                 slug: string;
-                image: string | null;
             };
             createdBy: {
-                id: number;
                 name: string;
                 role: string;
                 profilePicture: string | null;
+                id: number;
             } | null;
         } & {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             title: string;
             slug: string;
             description: string;
+            categoryId: number;
             thumb: string | null;
             content: import("@prisma/client/runtime/library").JsonValue;
-            categoryId: number;
-            numberViews: number;
             isPublished: boolean;
+            numberViews: number;
             createdById: number | null;
-            createdAt: Date;
-            updatedAt: Date;
         })[];
         total: number;
         page: number;
@@ -61,30 +61,30 @@ export declare class BlogController {
         message: string;
         data: ({
             category: {
+                image: string | null;
                 id: number;
                 title: string;
                 slug: string;
-                image: string | null;
             };
             createdBy: {
-                id: number;
                 name: string;
                 role: string;
                 profilePicture: string | null;
+                id: number;
             } | null;
         } & {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             title: string;
             slug: string;
             description: string;
+            categoryId: number;
             thumb: string | null;
             content: import("@prisma/client/runtime/library").JsonValue;
-            categoryId: number;
-            numberViews: number;
             isPublished: boolean;
+            numberViews: number;
             createdById: number | null;
-            createdAt: Date;
-            updatedAt: Date;
         })[];
     }>;
     findBySlug(slug: string, req: any, isPreview?: string): Promise<{
@@ -97,10 +97,10 @@ export declare class BlogController {
             hasLiked: boolean;
             hasDisliked: boolean;
             category: {
+                image: string | null;
                 id: number;
                 title: string;
                 slug: string;
-                image: string | null;
             };
             likes: {
                 id: number;
@@ -109,22 +109,22 @@ export declare class BlogController {
                 id: number;
             }[];
             createdBy: {
-                id: number;
                 name: string;
                 role: string;
                 profilePicture: string | null;
+                id: number;
             } | null;
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             title: string;
             slug: string;
             description: string;
+            categoryId: number;
             thumb: string | null;
             content: import("@prisma/client/runtime/library").JsonValue;
-            categoryId: number;
             isPublished: boolean;
             createdById: number | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     }>;
     update(id: string, dto: UpdateBlogDto, file: Express.Multer.File): Promise<{
@@ -132,17 +132,17 @@ export declare class BlogController {
         message: string;
         data: {
             id: number;
+            createdAt: Date;
+            updatedAt: Date;
             title: string;
             slug: string;
             description: string;
+            categoryId: number;
             thumb: string | null;
             content: import("@prisma/client/runtime/library").JsonValue;
-            categoryId: number;
-            numberViews: number;
             isPublished: boolean;
+            numberViews: number;
             createdById: number | null;
-            createdAt: Date;
-            updatedAt: Date;
         };
     }>;
     remove(id: string): Promise<{

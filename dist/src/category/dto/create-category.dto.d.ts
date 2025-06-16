@@ -1,5 +1,6 @@
 export declare class CreateCategoryDto {
     title: string;
-    slug: string;
+    slug?: string;
     image?: string;
+    parentId?: number | null;
 }

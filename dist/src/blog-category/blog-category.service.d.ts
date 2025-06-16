@@ -10,24 +10,24 @@ export declare class BlogCategoryService {
         success: boolean;
         message: string;
         data: {
-            id: number;
-            title: string;
-            slug: string;
             image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
         };
     }>;
     findAll(page?: number, limit?: number, search?: string): Promise<{
         success: boolean;
         message: string;
         data: {
-            id: number;
-            title: string;
-            slug: string;
             image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
         }[];
         total: number;
         page: number;
@@ -37,36 +37,36 @@ export declare class BlogCategoryService {
         success: boolean;
         message: string;
         data: {
-            id: number;
-            title: string;
-            slug: string;
             image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
         }[];
     }>;
     findOne(id: number): Promise<{
         success: boolean;
         message: string;
         data: {
-            id: number;
-            title: string;
-            slug: string;
             image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
         };
     }>;
     update(id: number, dto: UpdateBlogCategoryDto, file?: Express.Multer.File): Promise<{
         success: boolean;
         message: string;
         data: {
-            id: number;
-            title: string;
-            slug: string;
             image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
+            title: string;
+            slug: string;
         };
     }>;
     remove(id: number): Promise<{

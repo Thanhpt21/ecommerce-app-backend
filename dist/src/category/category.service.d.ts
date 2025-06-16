@@ -16,19 +16,31 @@ export declare class CategoryService {
             image: string | null;
             createdAt: Date;
             updatedAt: Date;
+            parentId: number | null;
         };
     }>;
     findAll(page?: number, limit?: number, search?: string): Promise<{
         success: boolean;
         message: string;
-        data: {
+        data: ({
+            subCategories: {
+                id: number;
+                title: string;
+                slug: string;
+                image: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                parentId: number | null;
+            }[];
+        } & {
             id: number;
             title: string;
             slug: string;
             image: string | null;
             createdAt: Date;
             updatedAt: Date;
-        }[];
+            parentId: number | null;
+        })[];
         total: number;
         page: number;
         pageCount: number;
@@ -36,26 +48,48 @@ export declare class CategoryService {
     findAllWithoutPagination(search?: string): Promise<{
         success: boolean;
         message: string;
-        data: {
+        data: ({
+            subCategories: {
+                id: number;
+                title: string;
+                slug: string;
+                image: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                parentId: number | null;
+            }[];
+        } & {
             id: number;
             title: string;
             slug: string;
             image: string | null;
             createdAt: Date;
             updatedAt: Date;
-        }[];
+            parentId: number | null;
+        })[];
         total: number;
     }>;
     findOne(id: number): Promise<{
         success: boolean;
         message: string;
         data: {
+            subCategories: {
+                id: number;
+                title: string;
+                slug: string;
+                image: string | null;
+                createdAt: Date;
+                updatedAt: Date;
+                parentId: number | null;
+            }[];
+        } & {
             id: number;
             title: string;
             slug: string;
             image: string | null;
             createdAt: Date;
             updatedAt: Date;
+            parentId: number | null;
         };
     }>;
     update(id: number, dto: UpdateCategoryDto, file?: Express.Multer.File): Promise<{
@@ -68,8 +102,10 @@ export declare class CategoryService {
             image: string | null;
             createdAt: Date;
             updatedAt: Date;
+            parentId: number | null;
         };
     }>;
+    private isDescendant;
     remove(id: number): Promise<{
         success: boolean;
         message: string;

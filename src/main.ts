@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express'; // ✅ Import đúng interface
 import { join } from 'path'; // ✅ Import join từ path
 import * as cookieParser from 'cookie-parser';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule); // ✅ Dùng generic type
@@ -16,7 +17,11 @@ async function bootstrap() {
     credentials: true, // Cho phép gửi cookie
   });
 
-  
+   app.useGlobalPipes(new ValidationPipe({
+    transform: true, // ⭐ BẬT TÍNH NĂNG TỰ ĐỘNG CHUYỂN ĐỔI KIỂU DỮ LIỆU ⭐
+    whitelist: true, // Loại bỏ các trường không định nghĩa trong DTO
+    forbidNonWhitelisted: true, // Ném lỗi nếu có trường không được phép
+  }));
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/', // Truy cập ảnh qua: http://localhost:3000/uploads/...

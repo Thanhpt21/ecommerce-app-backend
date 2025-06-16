@@ -45,6 +45,14 @@ model Category {
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+
+  // Self-referencing field for parent category
+  parentId  Int?
+  parent    Category? @relation("SubCategories", fields: [parentId], references: [id], onDelete: Cascade)
+
+  // Field for sub-categories
+  subCategories Category[] @relation("SubCategories")
 }
 
 model Brand {

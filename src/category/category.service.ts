@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { PrismaService } from 'prisma/prisma.service';
@@ -13,25 +13,49 @@ export class CategoryService {
   constructor(private prisma: PrismaService, private uploadService: UploadService) {}
 
   async create(dto: CreateCategoryDto, file?: Express.Multer.File) {
-    const slug = slugify(dto.title, { lower: true, strict: true });
-    let image = dto.image;
+      // 1. Tạo slug từ title hoặc sử dụng slug được cung cấp trong DTO
+      // DTO của bạn cần có trường slug tùy chọn hoặc bạn phải đảm bảo nó được tạo tự động
+      const slug = slugify(dto.title, { lower: true, strict: true });
+      let imageUrl = dto.image; // Sử dụng biến imageUrl để tránh nhầm lẫn với file upload
 
-    // Nếu có file ảnh được upload, sử dụng UploadService để upload ảnh
-    if (file) {
-      const { secure_url, public_id } = await this.uploadService.uploadImage(file, 0, 'category');
-      image = secure_url; // Lưu URL của ảnh đã được upload
+      // 2. Kiểm tra sự tồn tại của danh mục cha nếu parentId được cung cấp
+      if (dto.parentId) {
+        const parentCategory = await this.prisma.category.findUnique({ where: { id: dto.parentId } });
+        if (!parentCategory) {
+          throw new NotFoundException(`Danh mục cha với ID ${dto.parentId} không tìm thấy.`);
+        }
+      }
+
+      // 3. Kiểm tra xem slug có bị trùng lặp không
+      const existingCategory = await this.prisma.category.findUnique({ where: { slug } });
+      if (existingCategory) {
+        throw new BadRequestException(`Danh mục với slug '${slug}' đã tồn tại.`);
+      }
+
+      // 4. Xử lý upload ảnh nếu có file được cung cấp
+      if (file) {
+        // Đối với create, public_id thường không dựa vào ID của category vì category chưa được tạo.
+        // Bạn có thể truyền 0 hoặc một giá trị tạm thời, hoặc xử lý public_id riêng.
+        const { secure_url } = await this.uploadService.uploadImage(file, 0, 'category');
+        imageUrl = secure_url; // Lưu URL của ảnh đã được upload
+      }
+
+      // 5. Tạo danh mục mới trong cơ sở dữ liệu với các dữ liệu đã chuẩn bị
+      const newCategory = await this.prisma.category.create({
+        data: {
+          title: dto.title,
+          slug,
+          image: imageUrl,
+          parentId: dto.parentId, // Gán parentId từ DTO
+        },
+      });
+
+      return {
+        success: true,
+        message: 'Danh mục đã được tạo thành công',
+        data: newCategory,
+      };
     }
-
-    // Tạo category mới trong cơ sở dữ liệu
-    const newCategory = await this.prisma.category.create({ data: { ...dto, slug, image } });
-
-    return {
-      success: true,
-      message: 'Category created successfully',
-      data: newCategory,
-    };
-  }
-
 
   async findAll(page = 1, limit = 10, search = '') {
     const skip = (page - 1) * limit;
@@ -50,6 +74,10 @@ export class CategoryService {
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
+        // ⭐ THÊM INCLUDE ĐỂ LẤY DANH MỤC CON ⭐
+        include: {
+            subCategories: true, // Đúng với tên trường trong schema.prisma: subCategories
+        },
         }),
         this.prisma.category.count({ where: whereClause }),
     ]);
@@ -77,6 +105,10 @@ export class CategoryService {
     const categories = await this.prisma.category.findMany({
       where: whereClause,
       orderBy: { createdAt: 'desc' },
+      // ⭐ THÊM INCLUDE ĐỂ LẤY DANH MỤC CON ⭐
+      include: {
+        subCategories: true, // Đúng với tên trường trong schema.prisma: subCategories
+      },
     });
 
     return {
@@ -91,7 +123,13 @@ export class CategoryService {
   }
 
   async findOne(id: number) {
-    const category = await this.prisma.category.findUnique({ where: { id } });
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+      // ⭐ THÊM INCLUDE ĐỂ LẤY DANH MỤC CON ⭐
+      include: {
+        subCategories: true, // Đúng với tên trường trong schema.prisma: subCategories
+      },
+    });
     if (!category) throw new NotFoundException('Category not found');
     return {
         success: true,
@@ -103,40 +141,84 @@ export class CategoryService {
 async update(id: number, dto: UpdateCategoryDto, file?: Express.Multer.File) {
     const category = await this.prisma.category.findUnique({ where: { id } });
     if (!category) {
-      throw new NotFoundException('Category not found');
+      throw new NotFoundException('Không tìm thấy danh mục.');
     }
 
-    const updateData: any = { ...dto };
+    const { parentId, ...restDto } = dto;
+    const updateData: Prisma.CategoryUpdateInput = { ...restDto };
 
-    // Bắt đầu thêm logic cập nhật slug
-    // Nếu title được cung cấp trong DTO, hãy tạo slug mới từ title đó
+    // --- Bắt đầu logic cập nhật slug (ĐÃ SỬA) ---
+    // Kiểm tra xem title có được cập nhật và khác với title cũ không
+    const isTitleChanged = restDto.title !== undefined && restDto.title !== category.title;
+    // Kiểm tra xem slug có được gửi và khác với slug cũ không (người dùng thay đổi thủ công)
+    const isSlugManuallyChanged = restDto.slug !== undefined && restDto.slug !== category.slug;
 
-    if (dto.slug !== undefined) { // Check if slug is explicitly sent by client
-          updateData.slug = dto.slug
-        } else if (dto.title) {
-         const newSlug = slugify(dto.title, { lower: true, strict: true}); // Sử dụng locale 'vi' nếu cần
-      updateData.slug = newSlug;
+    if (isSlugManuallyChanged) {
+        // Nếu slug được thay đổi thủ công, ưu tiên sử dụng nó
+        updateData.slug = restDto.slug;
+    } else if (isTitleChanged) {
+        // ⭐ FIX: Đảm bảo restDto.title là string trước khi dùng slugify ⭐
+        if (typeof restDto.title === 'string') {
+            updateData.slug = slugify(restDto.title, { lower: true, strict: true });
+        } else {
+            // Trường hợp này không nên xảy ra nếu isTitleChanged là true
+            console.error("Logic error: restDto.title is not a string when isTitleChanged is true.");
+            throw new InternalServerErrorException("Lỗi logic nội bộ khi tạo slug.");
+        }
+    }
+    // Nếu cả title và slug đều không thay đổi (hoặc chỉ slug được gửi nhưng giống cũ),
+    // thì updateData.slug sẽ không được đặt, giữ nguyên slug hiện tại trong DB.
+    // --- Kết thúc logic cập nhật slug ---
 
-      // Kiểm tra xem slug mới có bị trùng với slug của danh mục khác không
-      const existingCategoryWithSlug = await this.prisma.category.findUnique({
-        where: { slug: newSlug },
-      });
+    // Kiểm tra tính duy nhất của slug MỚI (nếu có)
+    if (updateData.slug !== undefined && updateData.slug !== category.slug) {
+        const existingCategoryWithSlug = await this.prisma.category.findUnique({
+            where: { slug: updateData.slug as string }, // Ép kiểu vì updateData.slug có thể là string | Prisma.StringFieldUpdateOperationsInput
+        });
 
-      // Nếu tìm thấy danh mục khác có cùng slug VÀ đó không phải là danh mục đang được cập nhật
-      if (existingCategoryWithSlug && existingCategoryWithSlug.id !== id) {
-        throw new BadRequestException(`Category with slug '${newSlug}' already exists.`);
+        if (existingCategoryWithSlug && existingCategoryWithSlug.id !== id) {
+            throw new BadRequestException(`Danh mục với slug '${updateData.slug}' đã tồn tại.`);
+        }
+    }
+
+    // --- Bắt đầu logic cập nhật parentId thông qua quan hệ 'parent' ---
+    if (parentId !== undefined) {
+      if (parentId === id) {
+        throw new BadRequestException('Một danh mục không thể là cha của chính nó.');
+      }
+
+      if (parentId !== null) {
+        const parentCategory = await this.prisma.category.findUnique({ where: { id: parentId } });
+        if (!parentCategory) {
+          throw new NotFoundException(`Danh mục cha với ID ${parentId} không tìm thấy.`);
+        }
+
+        // Kiểm tra vòng lặp: Ngăn chặn nếu parentId là con của danh mục hiện tại (trực tiếp hoặc gián tiếp)
+        // Để kiểm tra vòng lặp đầy đủ, bạn cần một hàm đệ quy.
+        // Đây là kiểm tra cơ bản: không thể đặt một danh mục con của danh mục hiện tại làm cha
+        const isDescendant = await this.isDescendant(id, parentId);
+        if (isDescendant) {
+          throw new BadRequestException('Không thể đặt danh mục này làm cha vì nó là danh mục con của danh mục hiện tại.');
+        }
+
+        updateData.parent = { connect: { id: parentId } };
+      } else {
+        updateData.parent = { disconnect: true };
       }
     }
+    // --- Kết thúc logic cập nhật parentId ---
 
+    // --- Bắt đầu logic xử lý ảnh ---
     if (file) {
-      const currentPublicId = extractPublicId(category.image); // Sử dụng hàm helper ở đây
+      const currentPublicId = category.image ? extractPublicId(category.image) : null; 
       if (currentPublicId) {
-        await this.uploadService.deleteImage(currentPublicId); // Xóa ảnh cũ
+        await this.uploadService.deleteImage(currentPublicId);
       }
-
-      const { secure_url } = await this.uploadService.uploadImage(file, id, 'category'); // Không cần public_id nếu không lưu vào DB
-      updateData.image = secure_url; // Cập nhật URL ảnh mới
+      // Giả định uploadImage nhận buffer và trả về { secure_url: string }
+      const { secure_url } = await this.uploadService.uploadImage(file, id, 'category');
+      updateData.image = secure_url;
     }
+    // --- Kết thúc logic xử lý ảnh ---
 
     const updatedCategory = await this.prisma.category.update({
       where: { id },
@@ -145,33 +227,57 @@ async update(id: number, dto: UpdateCategoryDto, file?: Express.Multer.File) {
 
     return {
       success: true,
-      message: 'Category updated successfully',
+      message: 'Danh mục đã được cập nhật thành công',
       data: updatedCategory,
     };
   }
 
+  // Hàm trợ giúp để kiểm tra xem childId có phải là con (trực tiếp hoặc gián tiếp) của ancestorId không
+  // Bạn có thể đặt hàm này trong service hoặc một utility file
+  private async isDescendant(ancestorId: number, childId: number): Promise<boolean> {
+    if (ancestorId === childId) return true; // Một danh mục không thể là con của chính nó
 
-
-    async remove(id: number) {
-      const category = await this.prisma.category.findUnique({ where: { id } });
-      if (!category) {
-          throw new NotFoundException('Category not found');
+    let current = await this.prisma.category.findUnique({ where: { id: childId } });
+    while (current && current.parentId !== null) {
+      if (current.parentId === ancestorId) {
+        return true;
       }
+      current = await this.prisma.category.findUnique({ where: { id: current.parentId } });
+    }
+    return false;
+  }
 
-      // Nếu category có ảnh, xóa ảnh khỏi Cloudinary (hoặc dịch vụ lưu trữ)
-      const publicId = extractPublicId(category.image); // Lấy publicId từ URL ảnh
-      if (publicId) {
-          await this.uploadService.deleteImage(publicId); // Xóa ảnh từ Cloudinary
-      }
 
-      await this.prisma.category.delete({ where: { id } });
 
-      return {
-          success: true,
-          message: 'Category removed successfully',
-      };
+  async remove(id: number) {
+    const category = await this.prisma.category.findUnique({ where: { id } });
+    if (!category) {
+      throw new NotFoundException('Category not found');
     }
 
+    // ⭐ THÊM LOGIC KIỂM TRA DANH MỤC CON Ở ĐÂY ⭐
+    const hasChildren = await this.prisma.category.count({
+      where: { parentId: id },
+    });
 
+    if (hasChildren > 0) {
+      // Nếu có danh mục con, ném ra lỗi và không cho phép xóa
+      throw new BadRequestException('Cannot delete category with existing subcategories. Please delete subcategories first.');
+    }
+    // ⭐ KẾT THÚC LOGIC KIỂM TRA ⭐
+
+    // Nếu category có ảnh, xóa ảnh khỏi Cloudinary (hoặc dịch vụ lưu trữ)
+    const publicId = extractPublicId(category.image);
+    if (publicId) {
+      await this.uploadService.deleteImage(publicId);
+    }
+
+    await this.prisma.category.delete({ where: { id } });
+
+    return {
+      success: true,
+      message: 'Category removed successfully',
+    };
+  }
 
 }
