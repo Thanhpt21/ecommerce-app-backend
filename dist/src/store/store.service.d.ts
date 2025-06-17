@@ -10,12 +10,12 @@ export declare class StoreService {
         success: boolean;
         message: string;
         data: {
-            name: string;
-            image: string | null;
             id: number;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
             link: string;
+            image: string | null;
             mobile: string;
             address: string;
             iframe: string;
@@ -25,12 +25,12 @@ export declare class StoreService {
         success: boolean;
         message: string;
         data: {
-            name: string;
-            image: string | null;
             id: number;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
             link: string;
+            image: string | null;
             mobile: string;
             address: string;
             iframe: string;
@@ -43,12 +43,12 @@ export declare class StoreService {
         success: boolean;
         message: string;
         data: {
-            name: string;
-            image: string | null;
             id: number;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
             link: string;
+            image: string | null;
             mobile: string;
             address: string;
             iframe: string;
@@ -58,12 +58,12 @@ export declare class StoreService {
         success: boolean;
         message: string;
         data: {
-            name: string;
-            image: string | null;
             id: number;
+            name: string;
             createdAt: Date;
             updatedAt: Date;
             link: string;
+            image: string | null;
             mobile: string;
             address: string;
             iframe: string;

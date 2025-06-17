@@ -5,6 +5,7 @@ export class CreateBrandDto {
   @IsNotEmpty()
   title: string;
 
+  
   @IsString()
   @IsOptional()
   image?: string;

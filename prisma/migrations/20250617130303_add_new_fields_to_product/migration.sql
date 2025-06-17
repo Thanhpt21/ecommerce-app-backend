@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "Product" ADD COLUMN     "unit" TEXT NOT NULL DEFAULT 'cái',
+ADD COLUMN     "weight" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "weightUnit" TEXT NOT NULL DEFAULT 'gram';
+
+-- AlterTable
+ALTER TABLE "ProductSize" ADD COLUMN     "quantity" INTEGER NOT NULL DEFAULT 0;

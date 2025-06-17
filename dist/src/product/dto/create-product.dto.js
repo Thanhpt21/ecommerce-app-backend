@@ -82,6 +82,7 @@ __decorate([
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsInt)({ each: true }),
+    (0, class_transformer_1.Type)(() => Number),
     __metadata("design:type", Array)
 ], CreateProductDto.prototype, "sizeIds", void 0);
 //# sourceMappingURL=create-product.dto.js.map

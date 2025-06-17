@@ -14,11 +14,11 @@ export declare class BlogController {
             title: string;
             slug: string;
             description: string;
-            categoryId: number;
             thumb: string | null;
+            categoryId: number;
             content: import("@prisma/client/runtime/library").JsonValue;
-            isPublished: boolean;
             numberViews: number;
+            isPublished: boolean;
             createdById: number | null;
         };
     }>;
@@ -27,16 +27,16 @@ export declare class BlogController {
         message: string;
         data: ({
             category: {
-                image: string | null;
                 id: number;
+                image: string | null;
                 title: string;
                 slug: string;
             };
             createdBy: {
+                id: number;
                 name: string;
                 role: string;
                 profilePicture: string | null;
-                id: number;
             } | null;
         } & {
             id: number;
@@ -45,11 +45,11 @@ export declare class BlogController {
             title: string;
             slug: string;
             description: string;
-            categoryId: number;
             thumb: string | null;
+            categoryId: number;
             content: import("@prisma/client/runtime/library").JsonValue;
-            isPublished: boolean;
             numberViews: number;
+            isPublished: boolean;
             createdById: number | null;
         })[];
         total: number;
@@ -61,16 +61,16 @@ export declare class BlogController {
         message: string;
         data: ({
             category: {
-                image: string | null;
                 id: number;
+                image: string | null;
                 title: string;
                 slug: string;
             };
             createdBy: {
+                id: number;
                 name: string;
                 role: string;
                 profilePicture: string | null;
-                id: number;
             } | null;
         } & {
             id: number;
@@ -79,11 +79,11 @@ export declare class BlogController {
             title: string;
             slug: string;
             description: string;
-            categoryId: number;
             thumb: string | null;
+            categoryId: number;
             content: import("@prisma/client/runtime/library").JsonValue;
-            isPublished: boolean;
             numberViews: number;
+            isPublished: boolean;
             createdById: number | null;
         })[];
     }>;
@@ -97,8 +97,8 @@ export declare class BlogController {
             hasLiked: boolean;
             hasDisliked: boolean;
             category: {
-                image: string | null;
                 id: number;
+                image: string | null;
                 title: string;
                 slug: string;
             };
@@ -109,10 +109,10 @@ export declare class BlogController {
                 id: number;
             }[];
             createdBy: {
+                id: number;
                 name: string;
                 role: string;
                 profilePicture: string | null;
-                id: number;
             } | null;
             id: number;
             createdAt: Date;
@@ -120,8 +120,8 @@ export declare class BlogController {
             title: string;
             slug: string;
             description: string;
-            categoryId: number;
             thumb: string | null;
+            categoryId: number;
             content: import("@prisma/client/runtime/library").JsonValue;
             isPublished: boolean;
             createdById: number | null;
@@ -137,11 +137,11 @@ export declare class BlogController {
             title: string;
             slug: string;
             description: string;
-            categoryId: number;
             thumb: string | null;
+            categoryId: number;
             content: import("@prisma/client/runtime/library").JsonValue;
-            isPublished: boolean;
             numberViews: number;
+            isPublished: boolean;
             createdById: number | null;
         };
     }>;

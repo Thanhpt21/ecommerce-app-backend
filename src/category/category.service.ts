@@ -138,7 +138,7 @@ export class CategoryService {
     };
   }
 
-async update(id: number, dto: UpdateCategoryDto, file?: Express.Multer.File) {
+  async update(id: number, dto: UpdateCategoryDto, file?: Express.Multer.File) {
     const category = await this.prisma.category.findUnique({ where: { id } });
     if (!category) {
       throw new NotFoundException('Không tìm thấy danh mục.');

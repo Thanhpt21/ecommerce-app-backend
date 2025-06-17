@@ -8,10 +8,10 @@ export declare class BlogCategoryController {
         success: boolean;
         message: string;
         data: {
-            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            image: string | null;
             title: string;
             slug: string;
         };
@@ -20,10 +20,10 @@ export declare class BlogCategoryController {
         success: boolean;
         message: string;
         data: {
-            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            image: string | null;
             title: string;
             slug: string;
         }[];
@@ -35,10 +35,10 @@ export declare class BlogCategoryController {
         success: boolean;
         message: string;
         data: {
-            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            image: string | null;
             title: string;
             slug: string;
         }[];
@@ -47,10 +47,10 @@ export declare class BlogCategoryController {
         success: boolean;
         message: string;
         data: {
-            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            image: string | null;
             title: string;
             slug: string;
         };
@@ -59,10 +59,10 @@ export declare class BlogCategoryController {
         success: boolean;
         message: string;
         data: {
-            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
+            image: string | null;
             title: string;
             slug: string;
         };

@@ -45,6 +45,7 @@ export class CreateProductDto {
 
   @IsArray()
   @IsInt({ each: true })
+  @Type(() => Number)
   sizeIds: number[];
 
 }

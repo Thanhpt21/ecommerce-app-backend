@@ -8,15 +8,15 @@ export declare class ConfigController {
         success: boolean;
         message: string;
         data: {
-            facebook: string | null;
+            id: number;
             name: string | null;
             email: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
             mobile: string | null;
             address: string | null;
             googlemap: string | null;
+            facebook: string | null;
             zalo: string | null;
             instagram: string | null;
             tiktok: string | null;
@@ -30,15 +30,15 @@ export declare class ConfigController {
         success: boolean;
         message: string;
         data: {
-            facebook: string | null;
+            id: number;
             name: string | null;
             email: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
             mobile: string | null;
             address: string | null;
             googlemap: string | null;
+            facebook: string | null;
             zalo: string | null;
             instagram: string | null;
             tiktok: string | null;
@@ -52,15 +52,15 @@ export declare class ConfigController {
         success: boolean;
         message: string;
         data: {
-            facebook: string | null;
+            id: number;
             name: string | null;
             email: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
             mobile: string | null;
             address: string | null;
             googlemap: string | null;
+            facebook: string | null;
             zalo: string | null;
             instagram: string | null;
             tiktok: string | null;

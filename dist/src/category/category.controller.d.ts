@@ -9,11 +9,11 @@ export declare class CategoryController {
         message: string;
         data: {
             id: number;
-            title: string;
-            slug: string;
-            image: string | null;
             createdAt: Date;
             updatedAt: Date;
+            image: string | null;
+            title: string;
+            slug: string;
             parentId: number | null;
         };
     }>;
@@ -23,20 +23,20 @@ export declare class CategoryController {
         data: ({
             subCategories: {
                 id: number;
-                title: string;
-                slug: string;
-                image: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                image: string | null;
+                title: string;
+                slug: string;
                 parentId: number | null;
             }[];
         } & {
             id: number;
-            title: string;
-            slug: string;
-            image: string | null;
             createdAt: Date;
             updatedAt: Date;
+            image: string | null;
+            title: string;
+            slug: string;
             parentId: number | null;
         })[];
         total: number;
@@ -49,20 +49,20 @@ export declare class CategoryController {
         data: ({
             subCategories: {
                 id: number;
-                title: string;
-                slug: string;
-                image: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                image: string | null;
+                title: string;
+                slug: string;
                 parentId: number | null;
             }[];
         } & {
             id: number;
-            title: string;
-            slug: string;
-            image: string | null;
             createdAt: Date;
             updatedAt: Date;
+            image: string | null;
+            title: string;
+            slug: string;
             parentId: number | null;
         })[];
         total: number;
@@ -73,20 +73,20 @@ export declare class CategoryController {
         data: {
             subCategories: {
                 id: number;
-                title: string;
-                slug: string;
-                image: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                image: string | null;
+                title: string;
+                slug: string;
                 parentId: number | null;
             }[];
         } & {
             id: number;
-            title: string;
-            slug: string;
-            image: string | null;
             createdAt: Date;
             updatedAt: Date;
+            image: string | null;
+            title: string;
+            slug: string;
             parentId: number | null;
         };
     }>;
@@ -95,11 +95,11 @@ export declare class CategoryController {
         message: string;
         data: {
             id: number;
-            title: string;
-            slug: string;
-            image: string | null;
             createdAt: Date;
             updatedAt: Date;
+            image: string | null;
+            title: string;
+            slug: string;
             parentId: number | null;
         };
     }>;

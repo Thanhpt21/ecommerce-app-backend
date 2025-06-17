@@ -21,6 +21,7 @@ export declare class ProductController {
             } & {
                 productId: number;
                 sizeId: number;
+                quantity: number;
             })[];
         } & {
             id: number;
@@ -31,17 +32,20 @@ export declare class ProductController {
             code: string;
             discount: number;
             description: string;
+            thumb: string;
             price: number;
+            sold: number;
             status: string;
+            averageRating: number;
+            ratingCount: number;
             tags: string[];
+            images: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
-            thumb: string;
-            images: string[];
-            sold: number;
-            averageRating: number;
-            ratingCount: number;
+            weight: number;
+            weightUnit: string;
+            unit: string;
         }) | null;
     }>;
     update(id: string, dto: UpdateProductDto, files: {
@@ -67,6 +71,7 @@ export declare class ProductController {
             } & {
                 productId: number;
                 sizeId: number;
+                quantity: number;
             })[];
             id: number;
             createdAt: Date;
@@ -76,17 +81,20 @@ export declare class ProductController {
             code: string;
             discount: number;
             description: string;
+            thumb: string;
             price: number;
+            sold: number;
             status: string;
+            averageRating: number;
+            ratingCount: number;
             tags: string[];
+            images: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
-            thumb: string;
-            images: string[];
-            sold: number;
-            averageRating: number;
-            ratingCount: number;
+            weight: number;
+            weightUnit: string;
+            unit: string;
         };
     }>;
     findAll(page?: number, limit?: number, search?: string, categoryId?: string, brandId?: string, colorId?: string, sortBy?: string, price_gte?: string, price_lte?: string): Promise<{
@@ -112,10 +120,10 @@ export declare class ProductController {
                 updatedAt: Date;
                 title: string;
                 discount: number;
-                price: number;
-                colorId: number | null;
                 thumb: string;
+                price: number;
                 images: string[];
+                colorId: number | null;
                 productId: number;
                 sku: string;
             }[];
@@ -134,10 +142,10 @@ export declare class ProductController {
             } | null;
             ratings: ({
                 postedBy: {
+                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
-                    id: number;
                 };
             } & {
                 id: number;
@@ -156,17 +164,20 @@ export declare class ProductController {
             code: string;
             discount: number;
             description: string;
+            thumb: string;
             price: number;
+            sold: number;
             status: string;
+            averageRating: number;
+            ratingCount: number;
             tags: string[];
+            images: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
-            thumb: string;
-            images: string[];
-            sold: number;
-            averageRating: number;
-            ratingCount: number;
+            weight: number;
+            weightUnit: string;
+            unit: string;
         }[];
         total: number;
         page: number;
@@ -195,10 +206,10 @@ export declare class ProductController {
                 updatedAt: Date;
                 title: string;
                 discount: number;
-                price: number;
-                colorId: number | null;
                 thumb: string;
+                price: number;
                 images: string[];
+                colorId: number | null;
                 productId: number;
                 sku: string;
             }[];
@@ -217,10 +228,10 @@ export declare class ProductController {
             } | null;
             ratings: ({
                 postedBy: {
+                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
-                    id: number;
                 };
             } & {
                 id: number;
@@ -239,17 +250,20 @@ export declare class ProductController {
             code: string;
             discount: number;
             description: string;
+            thumb: string;
             price: number;
+            sold: number;
             status: string;
+            averageRating: number;
+            ratingCount: number;
             tags: string[];
+            images: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
-            thumb: string;
-            images: string[];
-            sold: number;
-            averageRating: number;
-            ratingCount: number;
+            weight: number;
+            weightUnit: string;
+            unit: string;
         }[];
     }>;
     findOne(id: number): Promise<{
@@ -275,10 +289,10 @@ export declare class ProductController {
                 updatedAt: Date;
                 title: string;
                 discount: number;
-                price: number;
-                colorId: number | null;
                 thumb: string;
+                price: number;
                 images: string[];
+                colorId: number | null;
                 productId: number;
                 sku: string;
             }[];
@@ -297,10 +311,10 @@ export declare class ProductController {
             } | null;
             ratings: ({
                 postedBy: {
+                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
-                    id: number;
                 };
             } & {
                 id: number;
@@ -319,14 +333,17 @@ export declare class ProductController {
             code: string;
             discount: number;
             description: string;
-            price: number;
-            status: string;
-            tags: string[];
             thumb: string;
-            images: string[];
+            price: number;
             sold: number;
+            status: string;
             averageRating: number;
             ratingCount: number;
+            tags: string[];
+            images: string[];
+            weight: number;
+            weightUnit: string;
+            unit: string;
         };
     }>;
     findOneBySlug(slug: string): Promise<{
@@ -352,10 +369,10 @@ export declare class ProductController {
                 updatedAt: Date;
                 title: string;
                 discount: number;
-                price: number;
-                colorId: number | null;
                 thumb: string;
+                price: number;
                 images: string[];
+                colorId: number | null;
                 productId: number;
                 sku: string;
             }[];
@@ -374,10 +391,10 @@ export declare class ProductController {
             } | null;
             ratings: ({
                 postedBy: {
+                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
-                    id: number;
                 };
             } & {
                 id: number;
@@ -396,14 +413,17 @@ export declare class ProductController {
             code: string;
             discount: number;
             description: string;
-            price: number;
-            status: string;
-            tags: string[];
             thumb: string;
-            images: string[];
+            price: number;
             sold: number;
+            status: string;
             averageRating: number;
             ratingCount: number;
+            tags: string[];
+            images: string[];
+            weight: number;
+            weightUnit: string;
+            unit: string;
         };
     } | {
         success: boolean;
@@ -453,10 +473,10 @@ export declare class ProductController {
                 updatedAt: Date;
                 title: string;
                 discount: number;
-                price: number;
-                colorId: number | null;
                 thumb: string;
+                price: number;
                 images: string[];
+                colorId: number | null;
                 productId: number;
                 sku: string;
             }[];
@@ -476,10 +496,10 @@ export declare class ProductController {
             } | null;
             ratings: ({
                 postedBy: {
+                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
-                    id: number;
                 };
             } & {
                 id: number;
@@ -498,17 +518,20 @@ export declare class ProductController {
             code: string;
             discount: number;
             description: string;
+            thumb: string;
             price: number;
+            sold: number;
             status: string;
+            averageRating: number;
+            ratingCount: number;
             tags: string[];
+            images: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
-            thumb: string;
-            images: string[];
-            sold: number;
-            averageRating: number;
-            ratingCount: number;
+            weight: number;
+            weightUnit: string;
+            unit: string;
         }[];
         total: number;
         page: number;

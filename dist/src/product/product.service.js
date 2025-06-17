@@ -47,24 +47,13 @@ let ProductService = class ProductService {
         };
         if (!thumb)
             throw new common_1.BadRequestException('Thumb is required');
-        let sizeIds = [];
-        if (dto.sizeIds) {
-            try {
-                sizeIds = (typeof dto.sizeIds === 'string' ? JSON.parse(dto.sizeIds) : dto.sizeIds).map((id) => Number(id));
-            }
-            catch (error) {
-                throw new common_1.BadRequestException('Invalid sizeIds format');
-            }
-        }
-        else {
-            sizeIds = [];
-        }
+        let sizeIds = dto.sizeIds || [];
         if (sizeIds.length > 0) {
             const validSizes = await this.prisma.size.findMany({
                 where: { id: { in: sizeIds } },
             });
             if (validSizes.length !== sizeIds.length) {
-                throw new common_1.BadRequestException('Some sizeIds are invalid');
+                throw new common_1.BadRequestException('Một số sizeIds không hợp lệ');
             }
         }
         const product = await this.prisma.product.create({
@@ -112,81 +101,156 @@ let ProductService = class ProductService {
                 size: true,
             },
         });
-        if (!product)
-            throw new common_1.NotFoundException('Product not found');
-        const updateData = { ...dto };
-        if (dto.tags) {
-            const tagsInput = dto.tags;
-            updateData.tags = Array.isArray(tagsInput)
-                ? tagsInput.map(tag => tag.trim())
-                : tagsInput.split(',').map(tag => tag.trim());
+        if (!product) {
+            throw new common_1.NotFoundException(`Không tìm thấy sản phẩm với ID ${id}`);
         }
-        if (dto.slug !== undefined) {
+        const updateData = {};
+        if (dto.description !== undefined)
+            updateData.description = dto.description;
+        if (dto.code !== undefined)
+            updateData.code = dto.code;
+        if (dto.status !== undefined)
+            updateData.status = dto.status;
+        const isTitleChanged = dto.title !== undefined && dto.title !== product.title;
+        const isSlugManuallyChanged = dto.slug !== undefined && dto.slug !== product.slug;
+        let newSlug;
+        if (isSlugManuallyChanged) {
+            newSlug = dto.slug;
+        }
+        else if (isTitleChanged) {
+            if (typeof dto.title === 'string') {
+                newSlug = (0, slugify_1.default)(dto.title, { lower: true, strict: true });
+            }
+            else {
+                console.error("Logic error: dto.title is not a string when isTitleChanged is true.");
+                throw new common_1.InternalServerErrorException("Lỗi logic nội bộ khi tạo slug cho sản phẩm.");
+            }
+        }
+        if (newSlug !== undefined && newSlug !== product.slug) {
+            const existingProductWithSlug = await this.prisma.product.findUnique({
+                where: { slug: newSlug },
+            });
+            if (existingProductWithSlug && existingProductWithSlug.id !== product.id) {
+                throw new common_1.BadRequestException(`Sản phẩm với slug '${newSlug}' đã tồn tại.`);
+            }
+            updateData.slug = newSlug;
+        }
+        else if (dto.slug !== undefined && dto.slug === product.slug) {
             updateData.slug = dto.slug;
         }
-        else if (dto.title) {
-            updateData.slug = (0, slugify_1.default)(dto.title, { lower: true, strict: true });
+        else if (dto.slug === undefined && dto.title === undefined) {
+            updateData.slug = product.slug;
         }
-        let thumbUrl = product.thumb;
-        let newImagesUrls = [...product.images];
-        if (files?.thumb?.[0]) {
-            const oldThumbId = (0, file_util_1.extractPublicId)(product.thumb);
-            if (oldThumbId)
-                await this.uploadService.deleteImage(oldThumbId);
-            const { secure_url } = await this.uploadService.uploadImage(files.thumb[0], id, 'product');
-            thumbUrl = secure_url;
-            updateData.thumb = thumbUrl;
-        }
-        if (files?.images?.length) {
-            const oldImageIds = product.images
-                .map(file_util_1.extractPublicId)
-                .filter((imageId) => !!imageId);
-            await Promise.all(oldImageIds.map((oldId) => this.uploadService.deleteImage(oldId)));
-            const uploaded = await Promise.all(files.images.map((file) => this.uploadService.uploadImage(file, id, 'product')));
-            newImagesUrls = uploaded.map((file) => file.secure_url);
-            updateData.images = newImagesUrls;
-        }
-        const numericFields = ['price', 'discount', 'brandId', 'categoryId', 'colorId'].reduce((acc, field) => {
-            if (dto[field] !== undefined)
-                acc[field] = Number(dto[field]);
-            return acc;
-        }, {});
-        Object.assign(updateData, numericFields);
-        delete updateData.sizeIds;
-        const updatePayload = { ...updateData };
-        if (files?.thumb?.[0])
-            updatePayload.thumb = thumbUrl;
-        if (files?.images?.length)
-            updatePayload.images = newImagesUrls;
-        await this.prisma.product.update({
-            where: { id },
-            data: updatePayload,
-        });
-        let sizeIdsToProcess = [];
-        if (dto.sizeIds) {
+        if (dto.tags) {
             try {
-                sizeIdsToProcess = Array.isArray(dto.sizeIds)
-                    ? dto.sizeIds
-                    : JSON.parse(dto.sizeIds);
-                sizeIdsToProcess = sizeIdsToProcess
-                    .map(id => Number(id))
-                    .filter(id => !isNaN(id) && id > 0);
+                updateData.tags =
+                    typeof dto.tags === 'string' ? JSON.parse(dto.tags) : dto.tags;
             }
             catch (error) {
-                throw new common_1.BadRequestException('Invalid sizeIds format');
+                throw new common_1.BadRequestException('Định dạng tags không hợp lệ');
             }
         }
-        await this.prisma.productSize.deleteMany({
-            where: { productId: id },
+        ['price', 'discount', 'brandId', 'categoryId', 'colorId'].forEach((field) => {
+            if (dto[field] !== undefined) {
+                if (dto[field] === null) {
+                    updateData[field] = null;
+                }
+                else {
+                    const value = Number(dto[field]);
+                    if (isNaN(value)) {
+                        throw new common_1.BadRequestException(`${field} phải là một số hợp lệ.`);
+                    }
+                    updateData[field] = value;
+                }
+            }
         });
-        if (sizeIdsToProcess.length > 0) {
-            await this.prisma.productSize.createMany({
-                data: sizeIdsToProcess.map((sizeId) => ({
-                    productId: id,
-                    sizeId,
-                })),
-                skipDuplicates: true,
-            });
+        if (files?.thumb?.[0]) {
+            if (product.thumb) {
+                const oldThumbPublicId = (0, file_util_1.extractPublicId)(product.thumb);
+                if (oldThumbPublicId) {
+                    await this.uploadService.deleteImage(oldThumbPublicId);
+                }
+            }
+            const { secure_url } = await this.uploadService.uploadImage(files.thumb[0], id, 'product');
+            updateData.thumb = secure_url;
+        }
+        if (files?.images?.length) {
+            if (product.images && product.images.length > 0) {
+                const oldImagePublicIds = product.images
+                    .map(file_util_1.extractPublicId)
+                    .filter((id) => !!id);
+                await Promise.all(oldImagePublicIds.map((publicId) => this.uploadService.deleteImage(publicId)));
+            }
+            const uploadedImages = await Promise.all(files.images.map((file) => this.uploadService.uploadImage(file, id, 'product')));
+            updateData.images = uploadedImages.map((img) => img.secure_url);
+        }
+        else if (dto.images !== undefined) {
+            let clientImagesValue = null;
+            if (typeof dto.images === 'string') {
+                try {
+                    clientImagesValue = JSON.parse(dto.images);
+                    if (!Array.isArray(clientImagesValue)) {
+                        throw new Error('Parsed images is not an array.');
+                    }
+                }
+                catch (e) {
+                    throw new common_1.BadRequestException('Định dạng images không hợp lệ. Phải là mảng chuỗi JSON hoặc null.');
+                }
+            }
+            else if (Array.isArray(dto.images)) {
+                clientImagesValue = dto.images;
+            }
+            else if (dto.images === null) {
+                clientImagesValue = null;
+            }
+            if (clientImagesValue !== null && clientImagesValue.length === 0) {
+                if (product.images && product.images.length > 0) {
+                    const oldImagePublicIds = product.images
+                        .map(file_util_1.extractPublicId)
+                        .filter((id) => !!id);
+                    await Promise.all(oldImagePublicIds.map((publicId) => this.uploadService.deleteImage(publicId)));
+                }
+                updateData.images = [];
+            }
+        }
+        delete updateData.sizeIds;
+        delete updateData.thumb;
+        delete updateData.images;
+        await this.prisma.product.update({
+            where: { id },
+            data: updateData,
+        });
+        if (dto.sizeIds !== undefined) {
+            let sizeIdsToProcess = [];
+            try {
+                sizeIdsToProcess = Array.isArray(dto.sizeIds)
+                    ? dto.sizeIds.map(Number)
+                    : JSON.parse(dto.sizeIds).map(Number);
+                sizeIdsToProcess = sizeIdsToProcess.filter((sId) => !isNaN(sId) && sId > 0);
+                if (sizeIdsToProcess.length > 0) {
+                    const validSizes = await this.prisma.size.findMany({
+                        where: { id: { in: sizeIdsToProcess } },
+                    });
+                    if (validSizes.length !== sizeIdsToProcess.length) {
+                        throw new common_1.BadRequestException('Một hoặc nhiều sizeIds được cung cấp không hợp lệ.');
+                    }
+                }
+            }
+            catch (error) {
+                throw new common_1.BadRequestException('Định dạng hoặc giá trị sizeIds không hợp lệ.');
+            }
+            await this.prisma.$transaction([
+                this.prisma.productSize.deleteMany({
+                    where: { productId: id },
+                }),
+                this.prisma.productSize.createMany({
+                    data: sizeIdsToProcess.map((sizeId) => ({
+                        productId: id,
+                        sizeId,
+                    })),
+                    skipDuplicates: true,
+                }),
+            ]);
         }
         const finalProduct = await this.prisma.product.findUnique({
             where: { id },
@@ -195,7 +259,7 @@ let ProductService = class ProductService {
             },
         });
         if (!finalProduct) {
-            throw new common_1.InternalServerErrorException('Product not found after update');
+            throw new common_1.InternalServerErrorException('Không tìm thấy sản phẩm sau thao tác cập nhật.');
         }
         const formattedProduct = {
             ...finalProduct,
@@ -204,7 +268,7 @@ let ProductService = class ProductService {
         delete formattedProduct.size;
         return {
             success: true,
-            message: 'Product updated successfully',
+            message: 'Cập nhật sản phẩm thành công',
             data: formattedProduct,
         };
     }

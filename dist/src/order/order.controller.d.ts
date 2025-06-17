@@ -19,8 +19,8 @@ export declare class OrderController {
                 code: string;
                 discount: number;
                 usageLimit: number;
-                minOrderValue: number;
                 usedCount: number;
+                minOrderValue: number;
             } | null;
             shipping: {
                 id: number;
@@ -34,13 +34,13 @@ export declare class OrderController {
                 createdAt: Date;
                 updatedAt: Date;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
                 isDefault: boolean;
-                userId: number;
             };
             items: ({
                 size: {
@@ -65,17 +65,20 @@ export declare class OrderController {
                     code: string;
                     discount: number;
                     description: string;
+                    thumb: string;
                     price: number;
+                    sold: number;
                     status: string;
+                    averageRating: number;
+                    ratingCount: number;
                     tags: string[];
+                    images: string[];
                     brandId: number | null;
                     categoryId: number | null;
                     colorId: number | null;
-                    thumb: string;
-                    images: string[];
-                    sold: number;
-                    averageRating: number;
-                    ratingCount: number;
+                    weight: number;
+                    weightUnit: string;
+                    unit: string;
                 } | null;
                 variant: {
                     id: number;
@@ -83,10 +86,10 @@ export declare class OrderController {
                     updatedAt: Date;
                     title: string;
                     discount: number;
-                    price: number;
-                    colorId: number | null;
                     thumb: string;
+                    price: number;
                     images: string[];
+                    colorId: number | null;
                     productId: number;
                     sku: string;
                 } | null;
@@ -97,8 +100,8 @@ export declare class OrderController {
                 colorId: number | null;
                 productId: number | null;
                 sizeId: number | null;
-                variantId: number | null;
                 quantity: number;
+                variantId: number | null;
                 orderId: number;
             })[];
         } & {
@@ -108,15 +111,15 @@ export declare class OrderController {
             discountAmount: number;
             status: string;
             userId: number;
-            paymentMethod: string;
-            shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
+            paymentMethod: string;
             note: string | null;
-            couponId: number | null;
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            shippingAddressId: number;
+            couponId: number | null;
+            shippingId: number | null;
         };
     }>;
     findAll(page: number | undefined, limit: number | undefined, search: string | undefined, user: UserResponseDto, statusFilter?: string, paymentMethodFilter?: string): Promise<{
@@ -167,12 +170,12 @@ export declare class OrderController {
             shippingAddress: {
                 id: number;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
-                userId: number;
             };
             user: {
                 email: string;
@@ -238,12 +241,12 @@ export declare class OrderController {
             shippingAddress: {
                 id: number;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
-                userId: number;
             };
             user: {
                 email: string;
@@ -294,12 +297,12 @@ export declare class OrderController {
             shippingAddress: {
                 id: number;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
-                userId: number;
             };
             items: ({
                 size: {
@@ -334,8 +337,8 @@ export declare class OrderController {
                 colorId: number | null;
                 productId: number | null;
                 sizeId: number | null;
-                variantId: number | null;
                 quantity: number;
+                variantId: number | null;
                 orderId: number;
             })[];
         } & {
@@ -345,15 +348,15 @@ export declare class OrderController {
             discountAmount: number;
             status: string;
             userId: number;
-            paymentMethod: string;
-            shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
+            paymentMethod: string;
             note: string | null;
-            couponId: number | null;
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            shippingAddressId: number;
+            couponId: number | null;
+            shippingId: number | null;
         };
     }>;
     update(id: string, dto: UpdateOrderDto): Promise<{
@@ -365,13 +368,13 @@ export declare class OrderController {
                 createdAt: Date;
                 updatedAt: Date;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
                 isDefault: boolean;
-                userId: number;
             };
             items: ({
                 size: {
@@ -389,17 +392,20 @@ export declare class OrderController {
                     code: string;
                     discount: number;
                     description: string;
+                    thumb: string;
                     price: number;
+                    sold: number;
                     status: string;
+                    averageRating: number;
+                    ratingCount: number;
                     tags: string[];
+                    images: string[];
                     brandId: number | null;
                     categoryId: number | null;
                     colorId: number | null;
-                    thumb: string;
-                    images: string[];
-                    sold: number;
-                    averageRating: number;
-                    ratingCount: number;
+                    weight: number;
+                    weightUnit: string;
+                    unit: string;
                 } | null;
                 variant: {
                     id: number;
@@ -407,10 +413,10 @@ export declare class OrderController {
                     updatedAt: Date;
                     title: string;
                     discount: number;
-                    price: number;
-                    colorId: number | null;
                     thumb: string;
+                    price: number;
                     images: string[];
+                    colorId: number | null;
                     productId: number;
                     sku: string;
                 } | null;
@@ -421,8 +427,8 @@ export declare class OrderController {
                 colorId: number | null;
                 productId: number | null;
                 sizeId: number | null;
-                variantId: number | null;
                 quantity: number;
+                variantId: number | null;
                 orderId: number;
             })[];
         } & {
@@ -432,15 +438,15 @@ export declare class OrderController {
             discountAmount: number;
             status: string;
             userId: number;
-            paymentMethod: string;
-            shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
+            paymentMethod: string;
             note: string | null;
-            couponId: number | null;
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            shippingAddressId: number;
+            couponId: number | null;
+            shippingId: number | null;
         };
     }>;
     remove(id: string): Promise<{
@@ -457,15 +463,15 @@ export declare class OrderController {
             discountAmount: number;
             status: string;
             userId: number;
-            paymentMethod: string;
-            shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
+            paymentMethod: string;
             note: string | null;
-            couponId: number | null;
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            shippingAddressId: number;
+            couponId: number | null;
+            shippingId: number | null;
         };
     }>;
 }

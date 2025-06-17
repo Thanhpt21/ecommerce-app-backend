@@ -17,11 +17,11 @@ export declare class BlogService {
             title: string;
             slug: string;
             description: string;
-            categoryId: number;
             thumb: string | null;
+            categoryId: number;
             content: Prisma.JsonValue;
-            isPublished: boolean;
             numberViews: number;
+            isPublished: boolean;
             createdById: number | null;
         };
     }>;
@@ -30,16 +30,16 @@ export declare class BlogService {
         message: string;
         data: ({
             category: {
-                image: string | null;
                 id: number;
+                image: string | null;
                 title: string;
                 slug: string;
             };
             createdBy: {
+                id: number;
                 name: string;
                 role: string;
                 profilePicture: string | null;
-                id: number;
             } | null;
         } & {
             id: number;
@@ -48,11 +48,11 @@ export declare class BlogService {
             title: string;
             slug: string;
             description: string;
-            categoryId: number;
             thumb: string | null;
+            categoryId: number;
             content: Prisma.JsonValue;
-            isPublished: boolean;
             numberViews: number;
+            isPublished: boolean;
             createdById: number | null;
         })[];
         total: number;
@@ -64,16 +64,16 @@ export declare class BlogService {
         message: string;
         data: ({
             category: {
-                image: string | null;
                 id: number;
+                image: string | null;
                 title: string;
                 slug: string;
             };
             createdBy: {
+                id: number;
                 name: string;
                 role: string;
                 profilePicture: string | null;
-                id: number;
             } | null;
         } & {
             id: number;
@@ -82,11 +82,11 @@ export declare class BlogService {
             title: string;
             slug: string;
             description: string;
-            categoryId: number;
             thumb: string | null;
+            categoryId: number;
             content: Prisma.JsonValue;
-            isPublished: boolean;
             numberViews: number;
+            isPublished: boolean;
             createdById: number | null;
         })[];
     }>;
@@ -100,8 +100,8 @@ export declare class BlogService {
             hasLiked: boolean;
             hasDisliked: boolean;
             category: {
-                image: string | null;
                 id: number;
+                image: string | null;
                 title: string;
                 slug: string;
             };
@@ -112,10 +112,10 @@ export declare class BlogService {
                 id: number;
             }[];
             createdBy: {
+                id: number;
                 name: string;
                 role: string;
                 profilePicture: string | null;
-                id: number;
             } | null;
             id: number;
             createdAt: Date;
@@ -123,8 +123,8 @@ export declare class BlogService {
             title: string;
             slug: string;
             description: string;
-            categoryId: number;
             thumb: string | null;
+            categoryId: number;
             content: Prisma.JsonValue;
             isPublished: boolean;
             createdById: number | null;
@@ -140,11 +140,11 @@ export declare class BlogService {
             title: string;
             slug: string;
             description: string;
-            categoryId: number;
             thumb: string | null;
+            categoryId: number;
             content: Prisma.JsonValue;
-            isPublished: boolean;
             numberViews: number;
+            isPublished: boolean;
             createdById: number | null;
         };
     }>;

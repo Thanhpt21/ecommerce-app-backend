@@ -166,6 +166,13 @@ model Product {
   colorId Int?
   color   Color? @relation(fields: [colorId], references: [id])
 
+  // Các trường cân nặng đã thêm trước đó
+  weight                  Float         @default(0) // Giá trị cân nặng
+  weightUnit              String        @default("gram") // Đơn vị cân nặng (e.g., "gram", "kg")
+
+  // Trường 'unit' mới được thêm vào đây
+  unit                    String        @default("cái") // Đơn vị tính của sản phẩm (e.g., "cái", "miếng", "hộp", "bộ")
+
   size ProductSize[]
 
   variants Variant[]
@@ -198,6 +205,8 @@ model Variant {
 model ProductSize {
   productId Int
   sizeId    Int
+
+  quantity  Int     @default(0) // Số lượng sản phẩm có trong kho cho size này
 
   product Product @relation(fields: [productId], references: [id])
   size    Size    @relation(fields: [sizeId], references: [id])
