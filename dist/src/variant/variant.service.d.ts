@@ -16,35 +16,35 @@ export declare class VariantService {
         data: ({
             color: {
                 id: number;
+                title: string;
                 createdAt: Date;
                 updatedAt: Date;
-                title: string;
                 code: string;
             } | null;
             sizes: ({
                 size: {
                     id: number;
+                    title: string;
                     createdAt: Date;
                     updatedAt: Date;
-                    title: string;
                 };
             } & {
+                variantId: number;
                 sizeId: number;
                 quantity: number;
-                variantId: number;
             })[];
         } & {
             id: number;
-            createdAt: Date;
-            updatedAt: Date;
             title: string;
-            discount: number;
             price: number;
-            colorId: number | null;
+            discount: number;
             thumb: string;
             images: string[];
-            productId: number;
             sku: string;
+            createdAt: Date;
+            updatedAt: Date;
+            productId: number;
+            colorId: number | null;
         }) | null;
     }>;
     update(id: number, dto: UpdateVariantDto, files: {
@@ -63,30 +63,31 @@ export declare class VariantService {
             }[];
             color: {
                 id: number;
+                title: string;
                 createdAt: Date;
                 updatedAt: Date;
-                title: string;
                 code: string;
             } | null;
             id: number;
-            createdAt: Date;
-            updatedAt: Date;
             title: string;
-            discount: number;
             price: number;
-            colorId: number | null;
+            discount: number;
             thumb: string;
             images: string[];
-            productId: number;
             sku: string;
+            createdAt: Date;
+            updatedAt: Date;
+            productId: number;
+            colorId: number | null;
         };
     }>;
     findAll(productId: number, page?: number, limit?: number, search?: string): Promise<{
         success: boolean;
         data: {
             sizes: {
-                id: number;
-                title: string;
+                id: any;
+                title: any;
+                quantity: any;
             }[];
             color: {
                 id: number;
@@ -94,16 +95,16 @@ export declare class VariantService {
                 code: string;
             } | null;
             id: number;
-            createdAt: Date;
-            updatedAt: Date;
             title: string;
-            discount: number;
             price: number;
-            colorId: number | null;
+            discount: number;
             thumb: string;
             images: string[];
-            productId: number;
             sku: string;
+            createdAt: Date;
+            updatedAt: Date;
+            productId: number;
+            colorId: number | null;
         }[];
         total: number;
         page: number;
@@ -117,16 +118,16 @@ export declare class VariantService {
                 title: string;
             }[];
             id: number;
-            createdAt: Date;
-            updatedAt: Date;
             title: string;
-            discount: number;
             price: number;
-            colorId: number | null;
+            discount: number;
             thumb: string;
             images: string[];
-            productId: number;
             sku: string;
+            createdAt: Date;
+            updatedAt: Date;
+            productId: number;
+            colorId: number | null;
         }[];
         total: number;
         page: number;

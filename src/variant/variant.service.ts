@@ -336,6 +336,7 @@ async create(
         include: {
           sizes: {
             select: {
+              quantity: true,
               size: {
                 select: {
                   id: true,
@@ -359,7 +360,11 @@ async create(
     // Flatten sizes: sizes: [{ id, name, ... }]
     const variantsWithSizes = variants.map((variant) => ({
       ...variant,
-      sizes: variant.sizes.map((vs) => vs.size),
+      sizes: variant.sizes.map((vs: any) => ({ // Using 'any' for 'vs', but consider a specific type if you have one (e.g., Prisma.VariantSizeGetPayload<...>)
+        id: vs.size.id,
+        title: vs.size.title,
+        quantity: vs.quantity, // <--- Extract the quantity here!
+      })),
       color: variant.color,
     }));
 

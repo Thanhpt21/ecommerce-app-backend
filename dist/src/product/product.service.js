@@ -683,10 +683,18 @@ let ProductService = ProductService_1 = class ProductService {
             const { size, variants, brandId, categoryId, colorId, ...rest } = product;
             const formattedProduct = {
                 ...rest,
-                sizes: size.map((s) => s.size),
+                sizes: size.map((s) => ({
+                    id: s.size.id,
+                    title: s.size.title,
+                    quantity: s.quantity,
+                })),
                 variants: variants.map((variant) => ({
                     ...variant,
-                    sizes: variant.sizes.map((s) => s.size),
+                    sizes: variant.sizes.map((s) => ({
+                        id: s.size.id,
+                        title: s.size.title,
+                        quantity: s.quantity,
+                    })),
                 })),
             };
             return {

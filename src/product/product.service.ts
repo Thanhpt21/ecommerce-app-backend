@@ -831,10 +831,19 @@ export class ProductService {
 
       const formattedProduct = {
         ...rest,
-        sizes: size.map((s) => s.size),
+       sizes: size.map((s: any) => ({ // Use 'any' or define a specific type for 's' if preferred
+          id: s.size.id,
+          title: s.size.title,
+          quantity: s.quantity, // <--- Extract quantity from the join table object
+        })),
         variants: variants.map((variant) => ({
           ...variant,
-          sizes: variant.sizes.map((s) => s.size),
+          // Map variant.sizes to include quantity
+          sizes: variant.sizes.map((s: any) => ({ // Use 'any' or define a specific type for 's' if preferred
+            id: s.size.id,
+            title: s.size.title,
+            quantity: s.quantity, // <--- Extract quantity from the join table object
+          })),
         })),
       };
 

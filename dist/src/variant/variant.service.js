@@ -239,6 +239,7 @@ let VariantService = class VariantService {
                 include: {
                     sizes: {
                         select: {
+                            quantity: true,
                             size: {
                                 select: {
                                     id: true,
@@ -260,7 +261,11 @@ let VariantService = class VariantService {
         ]);
         const variantsWithSizes = variants.map((variant) => ({
             ...variant,
-            sizes: variant.sizes.map((vs) => vs.size),
+            sizes: variant.sizes.map((vs) => ({
+                id: vs.size.id,
+                title: vs.size.title,
+                quantity: vs.quantity,
+            })),
             color: variant.color,
         }));
         return {
