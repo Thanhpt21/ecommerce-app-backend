@@ -8,9 +8,9 @@ export declare class ContactService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             name: string;
             email: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             mobile: string | null;
@@ -23,9 +23,9 @@ export declare class ContactService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             name: string;
             email: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             mobile: string | null;
@@ -41,9 +41,9 @@ export declare class ContactService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             name: string;
             email: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             mobile: string | null;
@@ -57,9 +57,9 @@ export declare class ContactService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             name: string;
             email: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             mobile: string | null;
@@ -72,9 +72,9 @@ export declare class ContactService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             name: string;
             email: string;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             mobile: string | null;

@@ -27,6 +27,7 @@ export declare class VariantController {
                 };
             } & {
                 sizeId: number;
+                quantity: number;
                 variantId: number;
             })[];
         } & {
@@ -35,10 +36,10 @@ export declare class VariantController {
             updatedAt: Date;
             title: string;
             discount: number;
-            thumb: string;
             price: number;
-            images: string[];
             colorId: number | null;
+            thumb: string;
+            images: string[];
             productId: number;
             sku: string;
         }) | null;
@@ -60,10 +61,10 @@ export declare class VariantController {
             updatedAt: Date;
             title: string;
             discount: number;
-            thumb: string;
             price: number;
-            images: string[];
             colorId: number | null;
+            thumb: string;
+            images: string[];
             productId: number;
             sku: string;
         }[];
@@ -83,10 +84,10 @@ export declare class VariantController {
             updatedAt: Date;
             title: string;
             discount: number;
-            thumb: string;
             price: number;
-            images: string[];
             colorId: number | null;
+            thumb: string;
+            images: string[];
             productId: number;
             sku: string;
         }[];
@@ -103,9 +104,10 @@ export declare class VariantController {
         data: {
             sizes: {
                 id: number;
+                title: string;
+                quantity: number;
                 createdAt: Date;
                 updatedAt: Date;
-                title: string;
             }[];
             color: {
                 id: number;
@@ -119,10 +121,10 @@ export declare class VariantController {
             updatedAt: Date;
             title: string;
             discount: number;
-            thumb: string;
             price: number;
-            images: string[];
             colorId: number | null;
+            thumb: string;
+            images: string[];
             productId: number;
             sku: string;
         };
@@ -134,9 +136,6 @@ export declare class VariantController {
     getVariantSizes(id: string): Promise<{
         success: boolean;
         message: string;
-        data: {
-            id: number;
-            title: string;
-        }[];
+        data: import("../types/variant.type").VariantSizeDetail[];
     }>;
 }

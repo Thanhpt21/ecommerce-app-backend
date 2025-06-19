@@ -12,13 +12,13 @@ export declare class ShippingAddressController {
             createdAt: Date;
             updatedAt: Date;
             address: string;
-            userId: number;
             fullName: string;
             phone: string;
             ward: string | null;
             district: string | null;
             province: string | null;
             isDefault: boolean;
+            userId: number;
         };
     }>;
     findAll(req: any): Promise<{
@@ -29,13 +29,13 @@ export declare class ShippingAddressController {
             createdAt: Date;
             updatedAt: Date;
             address: string;
-            userId: number;
             fullName: string;
             phone: string;
             ward: string | null;
             district: string | null;
             province: string | null;
             isDefault: boolean;
+            userId: number;
         }[];
     }>;
     findByUserIdQuery(userId: number): Promise<{
@@ -46,13 +46,13 @@ export declare class ShippingAddressController {
             createdAt: Date;
             updatedAt: Date;
             address: string;
-            userId: number;
             fullName: string;
             phone: string;
             ward: string | null;
             district: string | null;
             province: string | null;
             isDefault: boolean;
+            userId: number;
         }[];
     }>;
     update(id: number, dto: UpdateShippingAddressDto, req: any): Promise<{
@@ -63,13 +63,13 @@ export declare class ShippingAddressController {
             createdAt: Date;
             updatedAt: Date;
             address: string;
-            userId: number;
             fullName: string;
             phone: string;
             ward: string | null;
             district: string | null;
             province: string | null;
             isDefault: boolean;
+            userId: number;
         };
     }>;
     remove(id: number, req: any): Promise<{

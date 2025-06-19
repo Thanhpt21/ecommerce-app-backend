@@ -2,9 +2,11 @@ import { PrismaService } from 'prisma/prisma.service';
 import { UploadService } from 'src/upload/upload.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductSizeDetail } from 'src/types/product.type';
 export declare class ProductService {
     private readonly prisma;
     private readonly uploadService;
+    private readonly logger;
     constructor(prisma: PrismaService, uploadService: UploadService);
     create(dto: CreateProductDto, files: {
         thumb?: Express.Multer.File[];
@@ -13,6 +15,22 @@ export declare class ProductService {
         success: boolean;
         message: string;
         data: ({
+            category: {
+                image: string | null;
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                title: string;
+                slug: string;
+                parentId: number | null;
+            } | null;
+            brand: {
+                image: string | null;
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                title: string;
+            } | null;
             size: ({
                 size: {
                     id: number;
@@ -21,10 +39,17 @@ export declare class ProductService {
                     title: string;
                 };
             } & {
-                productId: number;
                 sizeId: number;
                 quantity: number;
+                productId: number;
             })[];
+            color: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                title: string;
+                code: string;
+            } | null;
         } & {
             id: number;
             createdAt: Date;
@@ -34,20 +59,20 @@ export declare class ProductService {
             code: string;
             discount: number;
             description: string;
-            thumb: string;
             price: number;
-            sold: number;
             status: string;
-            averageRating: number;
-            ratingCount: number;
             tags: string[];
-            images: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
+            thumb: string;
             weight: number;
             weightUnit: string;
             unit: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         }) | null;
     }>;
     update(id: number, dto: UpdateProductDto, files: {
@@ -59,10 +84,27 @@ export declare class ProductService {
         data: {
             sizes: {
                 id: number;
+                title: string;
+                quantity: number;
+                createdAt: Date;
+                updatedAt: Date;
+            }[];
+            category: {
+                image: string | null;
+                id: number;
                 createdAt: Date;
                 updatedAt: Date;
                 title: string;
-            }[];
+                slug: string;
+                parentId: number | null;
+            } | null;
+            brand: {
+                image: string | null;
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                title: string;
+            } | null;
             size: ({
                 size: {
                     id: number;
@@ -71,10 +113,17 @@ export declare class ProductService {
                     title: string;
                 };
             } & {
-                productId: number;
                 sizeId: number;
                 quantity: number;
+                productId: number;
             })[];
+            color: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                title: string;
+                code: string;
+            } | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
@@ -83,20 +132,20 @@ export declare class ProductService {
             code: string;
             discount: number;
             description: string;
-            thumb: string;
             price: number;
-            sold: number;
             status: string;
-            averageRating: number;
-            ratingCount: number;
             tags: string[];
-            images: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
+            thumb: string;
             weight: number;
             weightUnit: string;
             unit: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         };
     }>;
     findAll(page?: number, limit?: number, search?: string, categoryId?: number, brandId?: number, colorId?: number, sortBy?: string, price_gte?: number, price_lte?: number): Promise<{
@@ -106,11 +155,13 @@ export declare class ProductService {
             sizes: {
                 id: number;
                 title: string;
+                quantity: number;
             }[];
             variants: {
                 sizes: {
                     id: number;
                     title: string;
+                    quantity: number;
                 }[];
                 color: {
                     id: number;
@@ -122,10 +173,10 @@ export declare class ProductService {
                 updatedAt: Date;
                 title: string;
                 discount: number;
-                thumb: string;
                 price: number;
-                images: string[];
                 colorId: number | null;
+                thumb: string;
+                images: string[];
                 productId: number;
                 sku: string;
             }[];
@@ -144,10 +195,10 @@ export declare class ProductService {
             } | null;
             ratings: ({
                 postedBy: {
-                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
+                    id: number;
                 };
             } & {
                 id: number;
@@ -166,20 +217,20 @@ export declare class ProductService {
             code: string;
             discount: number;
             description: string;
-            thumb: string;
             price: number;
-            sold: number;
             status: string;
-            averageRating: number;
-            ratingCount: number;
             tags: string[];
-            images: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
+            thumb: string;
             weight: number;
             weightUnit: string;
             unit: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         }[];
         total: number;
         page: number;
@@ -208,10 +259,10 @@ export declare class ProductService {
                 updatedAt: Date;
                 title: string;
                 discount: number;
-                thumb: string;
                 price: number;
-                images: string[];
                 colorId: number | null;
+                thumb: string;
+                images: string[];
                 productId: number;
                 sku: string;
             }[];
@@ -230,10 +281,10 @@ export declare class ProductService {
             } | null;
             ratings: ({
                 postedBy: {
-                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
+                    id: number;
                 };
             } & {
                 id: number;
@@ -252,20 +303,20 @@ export declare class ProductService {
             code: string;
             discount: number;
             description: string;
-            thumb: string;
             price: number;
-            sold: number;
             status: string;
-            averageRating: number;
-            ratingCount: number;
             tags: string[];
-            images: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
+            thumb: string;
             weight: number;
             weightUnit: string;
             unit: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         }[];
     }>;
     findOne(id: number): Promise<{
@@ -291,10 +342,10 @@ export declare class ProductService {
                 updatedAt: Date;
                 title: string;
                 discount: number;
-                thumb: string;
                 price: number;
-                images: string[];
                 colorId: number | null;
+                thumb: string;
+                images: string[];
                 productId: number;
                 sku: string;
             }[];
@@ -313,10 +364,10 @@ export declare class ProductService {
             } | null;
             ratings: ({
                 postedBy: {
-                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
+                    id: number;
                 };
             } & {
                 id: number;
@@ -335,17 +386,17 @@ export declare class ProductService {
             code: string;
             discount: number;
             description: string;
-            thumb: string;
             price: number;
-            sold: number;
             status: string;
-            averageRating: number;
-            ratingCount: number;
             tags: string[];
-            images: string[];
+            thumb: string;
             weight: number;
             weightUnit: string;
             unit: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         };
     }>;
     findBySlug(slug: string): Promise<{
@@ -371,10 +422,10 @@ export declare class ProductService {
                 updatedAt: Date;
                 title: string;
                 discount: number;
-                thumb: string;
                 price: number;
-                images: string[];
                 colorId: number | null;
+                thumb: string;
+                images: string[];
                 productId: number;
                 sku: string;
             }[];
@@ -393,10 +444,10 @@ export declare class ProductService {
             } | null;
             ratings: ({
                 postedBy: {
-                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
+                    id: number;
                 };
             } & {
                 id: number;
@@ -415,17 +466,17 @@ export declare class ProductService {
             code: string;
             discount: number;
             description: string;
-            thumb: string;
             price: number;
-            sold: number;
             status: string;
-            averageRating: number;
-            ratingCount: number;
             tags: string[];
-            images: string[];
+            thumb: string;
             weight: number;
             weightUnit: string;
             unit: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         };
     } | {
         success: boolean;
@@ -439,10 +490,7 @@ export declare class ProductService {
     getSizesByProductId(productId: number): Promise<{
         success: boolean;
         message: string;
-        data: {
-            id: number;
-            title: string;
-        }[];
+        data: ProductSizeDetail[];
     }>;
     findProductsByCategorySlug(categorySlug: string, page?: number, limit?: number, search?: string, sortBy?: string, brandId?: number, colorId?: number): Promise<{
         success: boolean;
@@ -475,10 +523,10 @@ export declare class ProductService {
                 updatedAt: Date;
                 title: string;
                 discount: number;
-                thumb: string;
                 price: number;
-                images: string[];
                 colorId: number | null;
+                thumb: string;
+                images: string[];
                 productId: number;
                 sku: string;
             }[];
@@ -498,10 +546,10 @@ export declare class ProductService {
             } | null;
             ratings: ({
                 postedBy: {
-                    id: number;
                     name: string;
                     email: string;
                     profilePicture: string | null;
+                    id: number;
                 };
             } & {
                 id: number;
@@ -520,20 +568,20 @@ export declare class ProductService {
             code: string;
             discount: number;
             description: string;
-            thumb: string;
             price: number;
-            sold: number;
             status: string;
-            averageRating: number;
-            ratingCount: number;
             tags: string[];
-            images: string[];
             brandId: number | null;
             categoryId: number | null;
             colorId: number | null;
+            thumb: string;
             weight: number;
             weightUnit: string;
             unit: string;
+            images: string[];
+            sold: number;
+            averageRating: number;
+            ratingCount: number;
         }[];
         total: number;
         page: number;

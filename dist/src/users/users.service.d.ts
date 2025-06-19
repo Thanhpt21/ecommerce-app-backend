@@ -20,17 +20,17 @@ export declare class UsersService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             name: string;
             email: string;
             password: string | null;
             role: string;
+            profilePicture: string | null;
             phoneNumber: string | null;
             gender: string | null;
-            profilePicture: string | null;
-            profilePicturePublicId: string | null;
             isActive: boolean;
             type_account: string;
+            id: number;
+            profilePicturePublicId: string | null;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -44,17 +44,17 @@ export declare class UsersService {
         pageCount: number;
     }>;
     getUserById(id: number): Promise<{
-        id: number;
         name: string;
         email: string;
         password: string | null;
         role: string;
+        profilePicture: string | null;
         phoneNumber: string | null;
         gender: string | null;
-        profilePicture: string | null;
-        profilePicturePublicId: string | null;
         isActive: boolean;
         type_account: string;
+        id: number;
+        profilePicturePublicId: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
@@ -68,17 +68,17 @@ export declare class UsersService {
         message: string;
     }>;
     getUserByEmail(email: string): Promise<{
-        id: number;
         name: string;
         email: string;
         password: string | null;
         role: string;
+        profilePicture: string | null;
         phoneNumber: string | null;
         gender: string | null;
-        profilePicture: string | null;
-        profilePicturePublicId: string | null;
         isActive: boolean;
         type_account: string;
+        id: number;
+        profilePicturePublicId: string | null;
         createdAt: Date;
         updatedAt: Date;
     } | null>;

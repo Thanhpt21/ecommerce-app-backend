@@ -13,7 +13,10 @@ exports.VariantService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const upload_service_1 = require("../upload/upload.service");
+const create_variant_dto_1 = require("./dto/create-variant.dto");
 const file_util_1 = require("../utils/file.util");
+const class_transformer_1 = require("class-transformer");
+const class_validator_1 = require("class-validator");
 let VariantService = class VariantService {
     prisma;
     uploadService;
@@ -35,24 +38,33 @@ let VariantService = class VariantService {
         if (!thumb) {
             throw new common_1.BadRequestException('Thumb is required');
         }
-        let sizeIds = [];
-        if (dto.sizeIds) {
+        let parsedVariantSizes = [];
+        if (dto.variantSizes) {
             try {
-                sizeIds = (typeof dto.sizeIds === 'string' ? JSON.parse(dto.sizeIds) : dto.sizeIds).map((id) => Number(id));
+                const rawVariantSizes = JSON.parse(dto.variantSizes);
+                if (!Array.isArray(rawVariantSizes)) {
+                    throw new common_1.BadRequestException('Dữ liệu variantSizes phải là một mảng.');
+                }
+                const validationErrors = [];
+                for (const item of rawVariantSizes) {
+                    const instance = (0, class_transformer_1.plainToInstance)(create_variant_dto_1.VariantSizeDto, item);
+                    const errors = await (0, class_validator_1.validate)(instance);
+                    if (errors.length > 0) {
+                        validationErrors.push(...errors);
+                    }
+                    else {
+                        parsedVariantSizes.push(instance);
+                    }
+                }
+                if (validationErrors.length > 0) {
+                    const errorMessages = validationErrors.map(err => {
+                        return err.constraints ? Object.values(err.constraints).join(', ') : 'Lỗi không xác định.';
+                    }).flat();
+                    throw new common_1.BadRequestException(`Lỗi validation variantSizes: ${errorMessages.join('; ')}`);
+                }
             }
-            catch (error) {
-                throw new common_1.BadRequestException('Invalid sizeIds format');
-            }
-        }
-        else {
-            sizeIds = [];
-        }
-        if (sizeIds.length > 0) {
-            const validSizes = await this.prisma.size.findMany({
-                where: { id: { in: sizeIds } },
-            });
-            if (validSizes.length !== sizeIds.length) {
-                throw new common_1.BadRequestException('Some sizeIds are invalid');
+            catch (parseError) {
+                throw new common_1.BadRequestException('Dữ liệu variantSizes không hợp lệ (không phải JSON hoặc sai cấu trúc).');
             }
         }
         const variant = await this.prisma.variant.create({
@@ -64,14 +76,15 @@ let VariantService = class VariantService {
                 colorId: dto.colorId ? Number(dto.colorId) : undefined,
                 thumb,
                 images,
-                sku: `SKU-${dto.productId}-${Date.now()}`,
+                sku: `SKU-${dto.productId}`,
             },
         });
-        if (sizeIds.length > 0) {
+        if (parsedVariantSizes.length > 0) {
             await this.prisma.variantSize.createMany({
-                data: sizeIds.map((sizeId) => ({
+                data: parsedVariantSizes.map((vs) => ({
                     variantId: variant.id,
-                    sizeId,
+                    sizeId: vs.sizeId,
+                    quantity: vs.quantity ?? 0,
                 })),
                 skipDuplicates: true,
             });
@@ -101,80 +114,80 @@ let VariantService = class VariantService {
             },
         });
         if (!existingVariant) {
-            throw new common_1.NotFoundException('Variant not found');
+            throw new common_1.NotFoundException(`Không tìm thấy biến thể với ID ${id}.`);
         }
-        const updateData = { ...dto };
-        let thumbUrl = existingVariant.thumb;
-        let newImagesUrls = [...existingVariant.images];
+        const updateData = {};
+        if (dto.title !== undefined)
+            updateData.title = dto.title;
+        if (dto.price !== undefined)
+            updateData.price = dto.price;
+        if (dto.discount !== undefined)
+            updateData.discount = dto.discount;
+        if (dto.colorId !== undefined) {
+            updateData.color = dto.colorId === null ? { disconnect: true } : { connect: { id: dto.colorId } };
+        }
         if (files?.thumb?.[0]) {
-            const oldThumbPublicId = (0, file_util_1.extractPublicId)(existingVariant.thumb);
-            if (oldThumbPublicId) {
-                await this.uploadService.deleteImage(oldThumbPublicId);
+            if (existingVariant.thumb) {
+                const oldThumbPublicId = (0, file_util_1.extractPublicId)(existingVariant.thumb);
+                if (oldThumbPublicId) {
+                    await this.uploadService.deleteImage(oldThumbPublicId);
+                }
             }
             const { secure_url } = await this.uploadService.uploadImage(files.thumb[0], id, 'variant');
-            thumbUrl = secure_url;
-            updateData.thumb = thumbUrl;
+            updateData.thumb = secure_url;
         }
         if (files?.images?.length) {
-            const oldImagePublicIds = existingVariant.images
-                .map(file_util_1.extractPublicId)
-                .filter((imageId) => !!imageId);
-            await Promise.all(oldImagePublicIds.map((oldId) => this.uploadService.deleteImage(oldId)));
-            const uploaded = await Promise.all(files.images.map((file) => this.uploadService.uploadImage(file, id, 'variant')));
-            newImagesUrls = uploaded.map((img) => img.secure_url);
-            updateData.images = newImagesUrls;
-        }
-        else if (files?.images && files.images.length === 0) {
-            const oldImagePublicIds = existingVariant.images
-                .map(file_util_1.extractPublicId)
-                .filter((imageId) => !!imageId);
-            await Promise.all(oldImagePublicIds.map((oldId) => this.uploadService.deleteImage(oldId)));
-            newImagesUrls = [];
-            updateData.images = newImagesUrls;
-        }
-        const numericFields = ['price', 'discount', 'colorId', 'productId'].reduce((acc, field) => {
-            if (dto[field] !== undefined && dto[field] !== null) {
-                acc[field] = Number(dto[field]);
+            if (existingVariant.images && existingVariant.images.length > 0) {
+                const oldImagePublicIds = existingVariant.images
+                    .map(file_util_1.extractPublicId)
+                    .filter((_id) => !!_id);
+                await Promise.all(oldImagePublicIds.map((publicId) => this.uploadService.deleteImage(publicId)));
             }
-            return acc;
-        }, {});
-        Object.assign(updateData, numericFields);
-        delete updateData.sizeIds;
-        delete updateData.sku;
+            const uploadedImages = await Promise.all(files.images.map((file) => this.uploadService.uploadImage(file, id, 'variant')));
+            updateData.images = uploadedImages.map((img) => img.secure_url);
+        }
+        else if (dto.images !== undefined) {
+            if (dto.images !== null && dto.images.length === 0) {
+                if (existingVariant.images && existingVariant.images.length > 0) {
+                    const oldImagePublicIds = existingVariant.images
+                        .map(file_util_1.extractPublicId)
+                        .filter((_id) => !!_id);
+                    await Promise.all(oldImagePublicIds.map((publicId) => this.uploadService.deleteImage(publicId)));
+                }
+                updateData.images = [];
+            }
+        }
         await this.prisma.variant.update({
             where: { id },
             data: updateData,
         });
-        let sizeIdsToProcess = [];
-        if (dto.sizeIds !== undefined) {
-            try {
-                sizeIdsToProcess = Array.isArray(dto.sizeIds)
-                    ? dto.sizeIds.map(id => Number(id))
-                    : JSON.parse(dto.sizeIds).map((id) => Number(id));
-                sizeIdsToProcess = sizeIdsToProcess
-                    .filter(id => !isNaN(id) && id > 0);
-            }
-            catch (error) {
-                throw new common_1.BadRequestException('Invalid sizeIds format');
-            }
-            if (sizeIdsToProcess.length > 0) {
+        if (dto.variantSizes !== undefined) {
+            const variantSizesData = dto.variantSizes;
+            const sizeIdsFromDto = variantSizesData.map(item => item.sizeId);
+            if (sizeIdsFromDto.length > 0) {
                 const validSizes = await this.prisma.size.findMany({
-                    where: { id: { in: sizeIdsToProcess } },
+                    where: { id: { in: sizeIdsFromDto } },
                 });
-                if (validSizes.length !== sizeIdsToProcess.length) {
-                    throw new common_1.BadRequestException('Some sizeIds are invalid');
+                if (validSizes.length !== sizeIdsFromDto.length) {
+                    const invalidSizeIds = sizeIdsFromDto.filter((sizeId) => !validSizes.some((s) => s.id === sizeId));
+                    throw new common_1.BadRequestException(`Một hoặc nhiều ID kích thước không hợp lệ: ${invalidSizeIds.join(', ')}.`);
                 }
             }
-            await this.prisma.variantSize.deleteMany({ where: { variantId: id } });
-            if (sizeIdsToProcess.length > 0) {
-                await this.prisma.variantSize.createMany({
-                    data: sizeIdsToProcess.map((sizeId) => ({
-                        variantId: id,
-                        sizeId,
-                    })),
-                    skipDuplicates: true,
+            await this.prisma.$transaction(async (prisma) => {
+                await prisma.variantSize.deleteMany({
+                    where: { variantId: id },
                 });
-            }
+                if (variantSizesData.length > 0) {
+                    await prisma.variantSize.createMany({
+                        data: variantSizesData.map((item) => ({
+                            variantId: id,
+                            sizeId: item.sizeId,
+                            quantity: item.quantity,
+                        })),
+                        skipDuplicates: true,
+                    });
+                }
+            });
         }
         const finalVariant = await this.prisma.variant.findUnique({
             where: { id },
@@ -184,16 +197,22 @@ let VariantService = class VariantService {
             },
         });
         if (!finalVariant) {
-            throw new common_1.InternalServerErrorException('Variant not found after update');
+            throw new common_1.InternalServerErrorException('Không tìm thấy biến thể sau thao tác cập nhật.');
         }
         const formattedVariant = {
             ...finalVariant,
-            sizes: finalVariant.sizes.map((item) => item.size),
+            sizes: finalVariant.sizes.map((item) => ({
+                id: item.size.id,
+                title: item.size.title,
+                quantity: item.quantity,
+                createdAt: item.size.createdAt,
+                updatedAt: item.size.updatedAt,
+            })),
         };
         delete formattedVariant.sizes;
         return {
             success: true,
-            message: 'Variant updated successfully',
+            message: 'Cập nhật biến thể thành công.',
             data: formattedVariant,
         };
     }
@@ -312,7 +331,9 @@ let VariantService = class VariantService {
             where: { id: variantId },
             include: {
                 sizes: {
-                    include: {
+                    select: {
+                        sizeId: true,
+                        quantity: true,
                         size: {
                             select: {
                                 id: true,
@@ -326,11 +347,16 @@ let VariantService = class VariantService {
         if (!variant) {
             throw new common_1.NotFoundException(`Variant with ID ${variantId} not found`);
         }
-        const sizes = variant.sizes.map((vs) => vs.size);
+        const variantSizesWithDetails = variant.sizes.map((vs) => ({
+            variantId: variant.id,
+            sizeId: vs.size.id,
+            title: vs.size.title,
+            quantity: vs.quantity,
+        }));
         return {
             success: true,
             message: `Sizes for variant ID ${variantId} fetched successfully`,
-            data: sizes,
+            data: variantSizesWithDetails,
         };
     }
 };

@@ -2,6 +2,7 @@ import { PrismaService } from 'prisma/prisma.service';
 import { UploadService } from 'src/upload/upload.service';
 import { CreateVariantDto } from './dto/create-variant.dto';
 import { UpdateVariantDto } from './dto/update-variant.dto';
+import { VariantSizeDetail } from 'src/types/variant.type';
 export declare class VariantService {
     private readonly prisma;
     private readonly uploadService;
@@ -29,6 +30,7 @@ export declare class VariantService {
                 };
             } & {
                 sizeId: number;
+                quantity: number;
                 variantId: number;
             })[];
         } & {
@@ -37,10 +39,10 @@ export declare class VariantService {
             updatedAt: Date;
             title: string;
             discount: number;
-            thumb: string;
             price: number;
-            images: string[];
             colorId: number | null;
+            thumb: string;
+            images: string[];
             productId: number;
             sku: string;
         }) | null;
@@ -54,9 +56,10 @@ export declare class VariantService {
         data: {
             sizes: {
                 id: number;
+                title: string;
+                quantity: number;
                 createdAt: Date;
                 updatedAt: Date;
-                title: string;
             }[];
             color: {
                 id: number;
@@ -70,10 +73,10 @@ export declare class VariantService {
             updatedAt: Date;
             title: string;
             discount: number;
-            thumb: string;
             price: number;
-            images: string[];
             colorId: number | null;
+            thumb: string;
+            images: string[];
             productId: number;
             sku: string;
         };
@@ -95,10 +98,10 @@ export declare class VariantService {
             updatedAt: Date;
             title: string;
             discount: number;
-            thumb: string;
             price: number;
-            images: string[];
             colorId: number | null;
+            thumb: string;
+            images: string[];
             productId: number;
             sku: string;
         }[];
@@ -118,10 +121,10 @@ export declare class VariantService {
             updatedAt: Date;
             title: string;
             discount: number;
-            thumb: string;
             price: number;
-            images: string[];
             colorId: number | null;
+            thumb: string;
+            images: string[];
             productId: number;
             sku: string;
         }[];
@@ -136,9 +139,6 @@ export declare class VariantService {
     getSizesByVariantId(variantId: number): Promise<{
         success: boolean;
         message: string;
-        data: {
-            id: number;
-            title: string;
-        }[];
+        data: VariantSizeDetail[];
     }>;
 }

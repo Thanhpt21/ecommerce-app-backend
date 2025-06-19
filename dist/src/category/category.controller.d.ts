@@ -8,10 +8,10 @@ export declare class CategoryController {
         success: boolean;
         message: string;
         data: {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
             slug: string;
             parentId: number | null;
@@ -22,19 +22,19 @@ export declare class CategoryController {
         message: string;
         data: ({
             subCategories: {
+                image: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
-                image: string | null;
                 title: string;
                 slug: string;
                 parentId: number | null;
             }[];
         } & {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
             slug: string;
             parentId: number | null;
@@ -48,19 +48,19 @@ export declare class CategoryController {
         message: string;
         data: ({
             subCategories: {
+                image: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
-                image: string | null;
                 title: string;
                 slug: string;
                 parentId: number | null;
             }[];
         } & {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
             slug: string;
             parentId: number | null;
@@ -72,19 +72,19 @@ export declare class CategoryController {
         message: string;
         data: {
             subCategories: {
+                image: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
-                image: string | null;
                 title: string;
                 slug: string;
                 parentId: number | null;
             }[];
         } & {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
             slug: string;
             parentId: number | null;
@@ -94,10 +94,10 @@ export declare class CategoryController {
         success: boolean;
         message: string;
         data: {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
             slug: string;
             parentId: number | null;

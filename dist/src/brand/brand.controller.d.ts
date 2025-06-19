@@ -8,10 +8,10 @@ export declare class BrandController {
         success: boolean;
         message: string;
         data: {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
         };
     }>;
@@ -19,10 +19,10 @@ export declare class BrandController {
         success: boolean;
         message: string;
         data: {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
         }[];
         total: number;
@@ -33,10 +33,10 @@ export declare class BrandController {
         success: boolean;
         message: string;
         data: {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
         }[];
         total: number;
@@ -45,10 +45,10 @@ export declare class BrandController {
         success: boolean;
         message: string;
         data: {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
         };
     }>;
@@ -56,10 +56,10 @@ export declare class BrandController {
         success: boolean;
         message: string;
         data: {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
         };
     }>;

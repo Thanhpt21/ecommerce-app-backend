@@ -9,9 +9,25 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateProductDto = void 0;
+exports.UpdateProductDto = exports.ProductSizeUpdateItemDto = void 0;
 const class_transformer_1 = require("class-transformer");
 const class_validator_1 = require("class-validator");
+const product_enums_1 = require("../enums/product.enums");
+class ProductSizeUpdateItemDto {
+    sizeId;
+    quantity;
+}
+exports.ProductSizeUpdateItemDto = ProductSizeUpdateItemDto;
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], ProductSizeUpdateItemDto.prototype, "sizeId", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], ProductSizeUpdateItemDto.prototype, "quantity", void 0);
 class UpdateProductDto {
     title;
     slug;
@@ -26,7 +42,10 @@ class UpdateProductDto {
     colorId;
     thumb;
     images;
-    sizeIds;
+    productSizes;
+    weight;
+    weightUnit;
+    unit;
 }
 exports.UpdateProductDto = UpdateProductDto;
 __decorate([
@@ -103,16 +122,45 @@ __decorate([
 ], UpdateProductDto.prototype, "images", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)({ message: 'productSizes phải là một mảng.' }),
+    (0, class_validator_1.ValidateNested)({ each: true, message: 'Mỗi phần tử trong productSizes phải là một đối tượng hợp lệ.' }),
+    (0, class_transformer_1.Type)(() => ProductSizeUpdateItemDto),
     (0, class_transformer_1.Transform)(({ value }) => {
-        if (Array.isArray(value))
-            return value;
-        try {
-            return JSON.parse(value);
+        if (typeof value === 'string' && value.length > 0) {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) {
+                    return parsed.map(item => (0, class_transformer_1.plainToInstance)(ProductSizeUpdateItemDto, item));
+                }
+                return value;
+            }
+            catch (e) {
+                console.error('Lỗi khi parse chuỗi productSizes JSON:', e);
+                return value;
+            }
         }
-        catch {
-            return value;
+        if (Array.isArray(value)) {
+            return value.map(item => (0, class_transformer_1.plainToInstance)(ProductSizeUpdateItemDto, item));
         }
+        return value;
     }),
     __metadata("design:type", Array)
-], UpdateProductDto.prototype, "sizeIds", void 0);
+], UpdateProductDto.prototype, "productSizes", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], UpdateProductDto.prototype, "weight", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(product_enums_1.WeightUnit),
+    __metadata("design:type", String)
+], UpdateProductDto.prototype, "weightUnit", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], UpdateProductDto.prototype, "unit", void 0);
 //# sourceMappingURL=update-product.dto.js.map

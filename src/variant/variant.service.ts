@@ -6,10 +6,13 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { UploadService } from 'src/upload/upload.service';
-import { CreateVariantDto } from './dto/create-variant.dto';
-import { UpdateVariantDto } from './dto/update-variant.dto';
+import { CreateVariantDto, VariantSizeDto } from './dto/create-variant.dto';
+import { UpdateVariantDto, VariantSizeUpdateItemDto } from './dto/update-variant.dto';
 import { Prisma } from '@prisma/client';
 import { extractPublicId } from 'src/utils/file.util';
+import { plainToInstance } from 'class-transformer';
+import { validate, ValidationError } from 'class-validator';
+import { VariantSizeDetail } from 'src/types/variant.type';
 
 @Injectable()
 export class VariantService {
@@ -43,24 +46,38 @@ async create(
             throw new BadRequestException('Thumb is required');
         }
 
-        // Kiểm tra sizeIds hợp lệ (nếu có)
-        let sizeIds: number[] = [];
-        if (dto.sizeIds) {
+        let parsedVariantSizes: VariantSizeDto[] = [];
+        if (dto.variantSizes) { // Sử dụng tên trường DTO mới: variantSizes
             try {
-                sizeIds = (typeof dto.sizeIds === 'string' ? JSON.parse(dto.sizeIds) : dto.sizeIds).map((id: any) => Number(id));
-            } catch (error) {
-                throw new BadRequestException('Invalid sizeIds format');
-            }
-        } else {
-            sizeIds = [];
-        }
+                const rawVariantSizes = JSON.parse(dto.variantSizes);
 
-        if (sizeIds.length > 0) {
-            const validSizes = await this.prisma.size.findMany({
-                where: { id: { in: sizeIds } },
-            });
-            if (validSizes.length !== sizeIds.length) {
-                throw new BadRequestException('Some sizeIds are invalid');
+                if (!Array.isArray(rawVariantSizes)) {
+                    throw new BadRequestException('Dữ liệu variantSizes phải là một mảng.');
+                }
+
+                const validationErrors: ValidationError[] = [];
+                for (const item of rawVariantSizes) {
+                    const instance = plainToInstance(VariantSizeDto, item); // Sử dụng VariantSizeDto
+                    const errors = await validate(instance);
+                    if (errors.length > 0) {
+                        validationErrors.push(...errors);
+                    } else {
+                        parsedVariantSizes.push(instance);
+                    }
+                }
+
+                if (validationErrors.length > 0) {
+                    // Cải thiện thông báo lỗi chi tiết
+                    const errorMessages = validationErrors.map(err => {
+                        return err.constraints ? Object.values(err.constraints).join(', ') : 'Lỗi không xác định.';
+                    }).flat();
+                    throw new BadRequestException(`Lỗi validation variantSizes: ${errorMessages.join('; ')}`);
+                }
+
+            } catch (parseError: any) {
+                // Log lỗi parse để debug
+                // console.error('Lỗi parse variantSizes:', parseError); // Kích hoạt khi debug
+                throw new BadRequestException('Dữ liệu variantSizes không hợp lệ (không phải JSON hoặc sai cấu trúc).');
             }
         }
 
@@ -74,18 +91,19 @@ async create(
                 colorId: dto.colorId ? Number(dto.colorId) : undefined,
                 thumb,
                 images,
-                sku: `SKU-${dto.productId}-${Date.now()}`,
+                sku: `SKU-${dto.productId}`,
             },
         });
 
-        // Thêm quan hệ size nếu có
-        if (sizeIds.length > 0) {
+        // ⭐ LOGIC MỚI: Tạo các bản ghi VariantSize với quantity ⭐
+        if (parsedVariantSizes.length > 0) {
             await this.prisma.variantSize.createMany({
-                data: sizeIds.map((sizeId) => ({
+                data: parsedVariantSizes.map((vs) => ({
                     variantId: variant.id,
-                    sizeId,
+                    sizeId: vs.sizeId,
+                    quantity: vs.quantity ?? 0, // Đặt mặc định là 0 nếu không được cung cấp
                 })),
-                skipDuplicates: true,
+                skipDuplicates: true, // Hữu ích để tránh lỗi nếu có bản ghi trùng lặp
             });
         }
 
@@ -111,156 +129,181 @@ async create(
 
 
   // Cập nhật variant
-  async update(
-    id: number,
-    dto: UpdateVariantDto,
-    files: { thumb?: Express.Multer.File[]; images?: Express.Multer.File[] },
-  ) {
-    const existingVariant = await this.prisma.variant.findUnique({
-      where: { id },
-      include: {
-        sizes: true, // Để biết các liên kết size hiện có
-      },
-    });
-
-    if (!existingVariant) {
-      throw new NotFoundException('Variant not found');
-    }
-
-    const updateData: any = { ...dto };
-
-    let thumbUrl = existingVariant.thumb;
-    let newImagesUrls: string[] = [...existingVariant.images];
-
-    // Upload thumb mới nếu có
-    if (files?.thumb?.[0]) {
-      const oldThumbPublicId = extractPublicId(existingVariant.thumb);
-      if (oldThumbPublicId) {
-        await this.uploadService.deleteImage(oldThumbPublicId);
-      }
-      const { secure_url } = await this.uploadService.uploadImage(
-        files.thumb[0],
-        id,
-        'variant',
-      );
-      thumbUrl = secure_url;
-      updateData.thumb = thumbUrl;
-    }
-
-    // Upload images mới nếu có
-    if (files?.images?.length) {
-      const oldImagePublicIds = existingVariant.images
-        .map(extractPublicId)
-        .filter((imageId): imageId is string => !!imageId);
-      await Promise.all(
-        oldImagePublicIds.map((oldId) => this.uploadService.deleteImage(oldId)),
-      );
-
-      const uploaded = await Promise.all(
-        files.images.map((file) =>
-          this.uploadService.uploadImage(file, id, 'variant'),
-        ),
-      );
-      newImagesUrls = uploaded.map((img) => img.secure_url);
-      updateData.images = newImagesUrls;
-    } else if (files?.images && files.images.length === 0) {
-      const oldImagePublicIds = existingVariant.images
-        .map(extractPublicId)
-        .filter((imageId): imageId is string => !!imageId);
-      await Promise.all(
-        oldImagePublicIds.map((oldId) => this.uploadService.deleteImage(oldId)),
-      );
-      newImagesUrls = [];
-      updateData.images = newImagesUrls;
-    }
-
-    // Đảm bảo các field số nếu undefined thì không lỗi Prisma
-    const numericFields = ['price', 'discount', 'colorId', 'productId'].reduce(
-      (acc, field) => {
-        if (dto[field] !== undefined && dto[field] !== null) {
-          acc[field] = Number(dto[field]);
-        }
-        return acc;
-      },
-      {},
-    );
-    Object.assign(updateData, numericFields);
-
-    delete updateData.sizeIds; // Xóa tạm thời để xử lý riêng
-    // delete updateData.title; // ĐÃ BỎ DÒNG NÀY ĐỂ CHO PHÉP CẬP NHẬT TITLE
-    delete updateData.sku; // Bỏ sku vì nó được tự động sinh ra và không nên cập nhật
-
-    // Cập nhật bản ghi chính của variant (không bao gồm sizeIds)
-    await this.prisma.variant.update({
-      where: { id },
-      data: updateData,
-    });
-
-    // Xử lý sizeIds
-    let sizeIdsToProcess: number[] = [];
-    if (dto.sizeIds !== undefined) {
-      try {
-        sizeIdsToProcess = Array.isArray(dto.sizeIds)
-          ? dto.sizeIds.map(id => Number(id))
-          : JSON.parse(dto.sizeIds as string).map((id: any) => Number(id));
-
-        sizeIdsToProcess = sizeIdsToProcess
-          .filter(id => !isNaN(id) && id > 0);
-
-      } catch (error) {
-        throw new BadRequestException('Invalid sizeIds format');
-      }
-
-      // Validate size tồn tại (tùy chọn, bạn có thể bỏ qua nếu đã validate ở frontend)
-      if (sizeIdsToProcess.length > 0) {
-        const validSizes = await this.prisma.size.findMany({
-          where: { id: { in: sizeIdsToProcess } },
+ async update(
+        id: number,
+        dto: UpdateVariantDto,
+        files: { thumb?: Express.Multer.File[]; images?: Express.Multer.File[] },
+    ) {
+        // 1. Tìm biến thể và Xác thực ban đầu
+        const existingVariant = await this.prisma.variant.findUnique({
+            where: { id },
+            include: {
+                sizes: true, // Bao gồm các liên kết VariantSize hiện có để quản lý chúng
+            },
         });
-        if (validSizes.length !== sizeIdsToProcess.length) {
-          throw new BadRequestException('Some sizeIds are invalid');
+
+        if (!existingVariant) {
+            throw new NotFoundException(`Không tìm thấy biến thể với ID ${id}.`);
         }
-      }
 
-      // Xoá toàn bộ size cũ của variant
-      await this.prisma.variantSize.deleteMany({ where: { variantId: id } });
+        // 2. Chuẩn bị dữ liệu cập nhật
+        const updateData: Prisma.VariantUpdateInput = {};
 
-      // Gán lại size mới cho variant
-      if (sizeIdsToProcess.length > 0) {
-        await this.prisma.variantSize.createMany({
-          data: sizeIdsToProcess.map((sizeId) => ({
-            variantId: id,
-            sizeId,
-          })),
-          skipDuplicates: true,
+        // Gán các trường trực tiếp từ DTO nếu chúng tồn tại
+        // Các trường này đã được ValidationPipe và class-transformer xử lý (kiểu, chuyển đổi)
+        if (dto.title !== undefined) updateData.title = dto.title;
+        if (dto.price !== undefined) updateData.price = dto.price;
+        if (dto.discount !== undefined) updateData.discount = dto.discount;
+
+        // Xử lý ColorId
+        if (dto.colorId !== undefined) {
+            updateData.color = dto.colorId === null ? { disconnect: true } : { connect: { id: dto.colorId } };
+        }
+
+        // 3. Xử lý tải lên Thumb
+        if (files?.thumb?.[0]) {
+            // Xóa thumb cũ nếu có
+            if (existingVariant.thumb) {
+                const oldThumbPublicId = extractPublicId(existingVariant.thumb);
+                if (oldThumbPublicId) {
+                    await this.uploadService.deleteImage(oldThumbPublicId);
+                }
+            }
+            // Tải lên thumb mới
+            const { secure_url } = await this.uploadService.uploadImage(
+                files.thumb[0],
+                id,
+                'variant', // Đảm bảo folder là 'variant'
+            );
+            updateData.thumb = secure_url;
+        }
+
+        // 4. Xử lý tải lên Images (Thay thế tất cả ảnh hiện có nếu ảnh mới được cung cấp)
+        if (files?.images?.length) {
+            // Xóa tất cả ảnh cũ
+            if (existingVariant.images && existingVariant.images.length > 0) {
+                const oldImagePublicIds = existingVariant.images
+                    .map(extractPublicId)
+                    .filter((_id): _id is string => !!_id);
+                await Promise.all(
+                    oldImagePublicIds.map((publicId) =>
+                        this.uploadService.deleteImage(publicId),
+                    ),
+                );
+            }
+            // Tải lên ảnh mới
+            const uploadedImages = await Promise.all(
+                files.images.map((file) =>
+                    this.uploadService.uploadImage(file, id, 'variant'), // Đảm bảo folder là 'variant'
+                ),
+            );
+            updateData.images = uploadedImages.map((img) => img.secure_url);
+        } else if (dto.images !== undefined) {
+            // Nếu client gửi trường images trong DTO (có thể là mảng rỗng hoặc null)
+            // Dto.images đã là string[] hoặc null nhờ class-transformer
+            if (dto.images !== null && dto.images.length === 0) {
+                // Nếu client muốn xóa tất cả ảnh hiện có (gửi mảng rỗng)
+                if (existingVariant.images && existingVariant.images.length > 0) {
+                    const oldImagePublicIds = existingVariant.images
+                        .map(extractPublicId)
+                        .filter((_id): _id is string => !!_id);
+                    await Promise.all(
+                        oldImagePublicIds.map((publicId) =>
+                            this.uploadService.deleteImage(publicId),
+                        ),
+                    );
+                }
+                updateData.images = []; // Đặt mảng ảnh thành rỗng
+            }
+            // Nếu dto.images không rỗng và không phải file upload mới,
+            // giả định đó là các URL ảnh cũ mà client muốn giữ lại.
+            // updateData.images sẽ không được cập nhật, và Prisma sẽ tự động giữ lại
+            // mảng images hiện có trong DB nếu không có thay đổi.
+        }
+
+        // 5. Cập nhật Biến thể trong Cơ sở dữ liệu (không bao gồm variantSizes)
+        await this.prisma.variant.update({
+            where: { id },
+            data: updateData,
         });
-      }
+
+        // 6. Xử lý liên kết Kích thước (VariantSize)
+        if (dto.variantSizes !== undefined) {
+            const variantSizesData: VariantSizeUpdateItemDto[] = dto.variantSizes;
+
+            const sizeIdsFromDto = variantSizesData.map(item => item.sizeId);
+
+            // Xác thực các sizeId có tồn tại trong hệ thống không
+            if (sizeIdsFromDto.length > 0) {
+                const validSizes = await this.prisma.size.findMany({
+                    where: { id: { in: sizeIdsFromDto } },
+                });
+                if (validSizes.length !== sizeIdsFromDto.length) {
+                    const invalidSizeIds = sizeIdsFromDto.filter(
+                        (sizeId) => !validSizes.some((s) => s.id === sizeId),
+                    );
+                    throw new BadRequestException(
+                        `Một hoặc nhiều ID kích thước không hợp lệ: ${invalidSizeIds.join(', ')}.`,
+                    );
+                }
+            }
+
+            // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
+            await this.prisma.$transaction(async (prisma) => {
+                // Xóa tất cả các liên kết size cũ cho biến thể này
+                await prisma.variantSize.deleteMany({
+                    where: { variantId: id },
+                });
+
+                // Tạo các liên kết size mới với số lượng tương ứng
+                if (variantSizesData.length > 0) {
+                    await prisma.variantSize.createMany({
+                        data: variantSizesData.map((item) => ({
+                            variantId: id,
+                            sizeId: item.sizeId,
+                            quantity: item.quantity,
+                        })),
+                        skipDuplicates: true, // Trong trường hợp có duplicate sizeId trong DTO (nên được xử lý ở DTO validation)
+                    });
+                }
+            });
+        }
+
+        // 7. Lấy và trả về Biến thể đã cập nhật
+        const finalVariant = await this.prisma.variant.findUnique({
+            where: { id },
+            include: {
+                sizes: { include: { size: true } }, // Bao gồm kích thước chi tiết thông qua VariantSize
+                color: true,
+            },
+        });
+
+        if (!finalVariant) {
+            throw new InternalServerErrorException(
+                'Không tìm thấy biến thể sau thao tác cập nhật.',
+            );
+        }
+
+        // Định dạng lại phản hồi để khớp với frontend (sizes với quantity)
+        const formattedVariant = {
+            ...finalVariant,
+            sizes: finalVariant.sizes.map((item) => ({
+                id: item.size.id,
+                title: item.size.title,
+                quantity: item.quantity,
+                createdAt: item.size.createdAt,
+                updatedAt: item.size.updatedAt,
+            })),
+        };
+        delete (formattedVariant as any).sizes; // Xóa mảng 'sizes' trung gian để tránh trùng lặp
+
+        return {
+            success: true,
+            message: 'Cập nhật biến thể thành công.',
+            data: formattedVariant,
+        };
     }
 
-    // Lấy lại variant đã cập nhật cùng size và color
-    const finalVariant = await this.prisma.variant.findUnique({
-      where: { id },
-      include: {
-        sizes: { include: { size: true } },
-        color: true,
-      },
-    });
-
-    if (!finalVariant) {
-      throw new InternalServerErrorException('Variant not found after update');
-    }
-
-    const formattedVariant = {
-      ...finalVariant,
-      sizes: finalVariant.sizes.map((item) => item.size),
-    };
-    delete (formattedVariant as any).sizes;
-
-    return {
-      success: true,
-      message: 'Variant updated successfully',
-      data: formattedVariant,
-    };
-  }
 
   async findAll(
     productId: number,
@@ -399,34 +442,58 @@ async create(
     };
   }
 
-  async getSizesByVariantId(variantId: number) {
-    const variant = await this.prisma.variant.findUnique({
-      where: { id: variantId },
-      include: {
-        sizes: {
-          include: {
-            size: {
-              select: {
-                id: true,
-                title: true,
-              },
+async getSizesByVariantId(variantId: number) {
+        type VariantWithVariantSizes = Prisma.VariantGetPayload<{
+            include: {
+                sizes: { // Tên quan hệ trong model Variant là 'sizes'
+                    select: {
+                        sizeId: true;
+                        quantity: true;
+                        size: {
+                            select: {
+                                id: true;
+                                title: true;
+                            };
+                        };
+                    };
+                };
+            };
+        }>;
+
+        const variant: VariantWithVariantSizes | null = await this.prisma.variant.findUnique({
+            where: { id: variantId },
+            include: {
+                sizes: {
+                    select: {
+                        sizeId: true,
+                        quantity: true,
+                        size: {
+                            select: {
+                                id: true,
+                                title: true,
+                            },
+                        },
+                    },
+                },
             },
-          },
-        },
-      },
-    });
+        });
 
-    if (!variant) {
-      throw new NotFoundException(`Variant with ID ${variantId} not found`);
+        if (!variant) {
+            throw new NotFoundException(`Variant with ID ${variantId} not found`);
+        }
+
+        const variantSizesWithDetails: VariantSizeDetail[] = variant.sizes.map((vs) => ({
+            variantId: variant.id,    // Lấy ID của variant cha
+            sizeId: vs.size.id,       // Lấy ID của size thực tế từ đối tượng size lồng trong vs
+            title: vs.size.title,     // Lấy tiêu đề của size từ đối tượng size lồng trong vs
+            quantity: vs.quantity,    // Lấy số lượng từ bảng trung gian VariantSize
+        }));
+
+        return {
+            success: true,
+            message: `Sizes for variant ID ${variantId} fetched successfully`,
+            data: variantSizesWithDetails,
+        };
     }
-
-    const sizes = variant.sizes.map((vs) => vs.size);
-
-    return {
-      success: true,
-      message: `Sizes for variant ID ${variantId} fetched successfully`,
-      data: sizes,
-    };
-  }
 
 }

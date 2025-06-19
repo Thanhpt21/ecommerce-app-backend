@@ -10,10 +10,10 @@ export declare class CategoryService {
         success: boolean;
         message: string;
         data: {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
             slug: string;
             parentId: number | null;
@@ -24,19 +24,19 @@ export declare class CategoryService {
         message: string;
         data: ({
             subCategories: {
+                image: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
-                image: string | null;
                 title: string;
                 slug: string;
                 parentId: number | null;
             }[];
         } & {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
             slug: string;
             parentId: number | null;
@@ -50,19 +50,19 @@ export declare class CategoryService {
         message: string;
         data: ({
             subCategories: {
+                image: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
-                image: string | null;
                 title: string;
                 slug: string;
                 parentId: number | null;
             }[];
         } & {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
             slug: string;
             parentId: number | null;
@@ -74,19 +74,19 @@ export declare class CategoryService {
         message: string;
         data: {
             subCategories: {
+                image: string | null;
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
-                image: string | null;
                 title: string;
                 slug: string;
                 parentId: number | null;
             }[];
         } & {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
             slug: string;
             parentId: number | null;
@@ -96,10 +96,10 @@ export declare class CategoryService {
         success: boolean;
         message: string;
         data: {
+            image: string | null;
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            image: string | null;
             title: string;
             slug: string;
             parentId: number | null;

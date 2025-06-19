@@ -8,12 +8,12 @@ export declare class StoreController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             name: string;
+            image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             link: string;
-            image: string | null;
             mobile: string;
             address: string;
             iframe: string;
@@ -23,12 +23,12 @@ export declare class StoreController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             name: string;
+            image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             link: string;
-            image: string | null;
             mobile: string;
             address: string;
             iframe: string;
@@ -41,12 +41,12 @@ export declare class StoreController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             name: string;
+            image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             link: string;
-            image: string | null;
             mobile: string;
             address: string;
             iframe: string;
@@ -56,12 +56,12 @@ export declare class StoreController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             name: string;
+            image: string | null;
+            id: number;
             createdAt: Date;
             updatedAt: Date;
             link: string;
-            image: string | null;
             mobile: string;
             address: string;
             iframe: string;

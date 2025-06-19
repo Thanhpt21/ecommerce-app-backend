@@ -14,16 +14,16 @@ export declare class AuthService {
     private configService;
     constructor(usersService: UsersService, jwtService: JwtService, prisma: PrismaService, emailService: EmailService, configService: ConfigService);
     validateUser(email: string, password: string): Promise<{
-        id: number;
         name: string;
         email: string;
         role: string;
+        profilePicture: string | null;
         phoneNumber: string | null;
         gender: string | null;
-        profilePicture: string | null;
-        profilePicturePublicId: string | null;
         isActive: boolean;
         type_account: string;
+        id: number;
+        profilePicturePublicId: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;

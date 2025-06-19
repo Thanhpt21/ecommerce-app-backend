@@ -1,3 +1,7 @@
+export declare class VariantSizeUpdateItemDto {
+    sizeId: number;
+    quantity: number;
+}
 export declare class UpdateVariantDto {
     title?: string;
     price?: number;
@@ -5,5 +9,5 @@ export declare class UpdateVariantDto {
     thumb?: string;
     images?: string[];
     colorId?: number;
-    sizeIds?: number[] | string;
+    variantSizes?: VariantSizeUpdateItemDto[];
 }

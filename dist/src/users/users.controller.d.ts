@@ -10,17 +10,17 @@ export declare class UsersController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             name: string;
             email: string;
             password: string | null;
             role: string;
+            profilePicture: string | null;
             phoneNumber: string | null;
             gender: string | null;
-            profilePicture: string | null;
-            profilePicturePublicId: string | null;
             isActive: boolean;
             type_account: string;
+            id: number;
+            profilePicturePublicId: string | null;
             createdAt: Date;
             updatedAt: Date;
         };
@@ -34,17 +34,17 @@ export declare class UsersController {
         pageCount: number;
     }>;
     getUserById(id: string): Promise<{
-        id: number;
         name: string;
         email: string;
         password: string | null;
         role: string;
+        profilePicture: string | null;
         phoneNumber: string | null;
         gender: string | null;
-        profilePicture: string | null;
-        profilePicturePublicId: string | null;
         isActive: boolean;
         type_account: string;
+        id: number;
+        profilePicturePublicId: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;

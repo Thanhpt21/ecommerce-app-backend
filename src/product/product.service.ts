@@ -2,18 +2,23 @@ import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'prisma/prisma.service';
 import { UploadService } from 'src/upload/upload.service';
-import { CreateProductDto } from './dto/create-product.dto';
-import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateProductDto, ProductSizeDto } from './dto/create-product.dto';
+import { ProductSizeUpdateItemDto, UpdateProductDto } from './dto/update-product.dto';
 import { Prisma } from '@prisma/client';
 import slugify from 'slugify';
 import { extractPublicId } from 'src/utils/file.util';
+import { validate, ValidationError } from 'class-validator';
+import { plainToInstance } from 'class-transformer';
+import { ProductSizeDetail } from 'src/types/product.type';
 
 @Injectable()
 export class ProductService {
+  private readonly logger = new Logger(ProductService.name); 
   constructor(
     private readonly prisma: PrismaService,
     private readonly uploadService: UploadService,
@@ -25,8 +30,9 @@ export class ProductService {
     files: { thumb?: Express.Multer.File[]; images?: Express.Multer.File[] },
   ) {
     if (!dto.title || typeof dto.title !== 'string') {
-      throw new BadRequestException('Title is required and must be a string');
+      throw new BadRequestException('Tiêu đề sản phẩm là bắt buộc và phải là chuỗi.');
     }
+
     const slug = slugify(dto.title, { lower: true });
 
     let thumb = dto.thumb;
@@ -36,7 +42,7 @@ export class ProductService {
     if (files?.thumb?.[0]) {
       const { secure_url } = await this.uploadService.uploadImage(
         files.thumb[0],
-        0,
+        0, // ID sản phẩm sẽ được gán sau, tạm thời truyền 0
         'product',
       );
       thumb = secure_url;
@@ -46,37 +52,67 @@ export class ProductService {
     if (files?.images?.length) {
       const uploadedImages = await Promise.all(
         files.images.map((file) =>
-          this.uploadService.uploadImage(file, 0, 'product'),
+          this.uploadService.uploadImage(file, 0, 'product'), // ID sản phẩm sẽ được gán sau, tạm thời truyền 0
         ),
       );
       images = uploadedImages.map((img) => img.secure_url);
     }
 
+    // Xử lý tags: đảm bảo là một mảng
+    // Giả định dto.tags có thể là string JSON hoặc Array<string>
     const tags = typeof dto.tags === 'string' ? JSON.parse(dto.tags) : dto.tags;
 
+    // Chuyển đổi các trường số sang Number và gán undefined nếu không có
     const numericFields = {
       price: Number(dto.price),
       discount: dto.discount ? Number(dto.discount) : 0,
       brandId: dto.brandId ? Number(dto.brandId) : undefined,
       categoryId: dto.categoryId ? Number(dto.categoryId) : undefined,
       colorId: dto.colorId ? Number(dto.colorId) : undefined,
+      // --- Thêm weight vào đây ---
+      weight: dto.weight ? Number(dto.weight) : undefined,
     };
 
-    if (!thumb) throw new BadRequestException('Thumb is required');
+    // Kiểm tra thumb phải có
+    if (!thumb) throw new BadRequestException('Ảnh thumbnail là bắt buộc.');
 
-    // Kiểm tra sizeIds hợp lệ (nếu có)
-    let sizeIds: number[] = dto.sizeIds || []; // Đảm bảo nó là một mảng, mặc định là rỗng nếu undefined
+     // ⭐ LOGIC CẬP NHẬT: Xử lý  từ chuỗi JSON ⭐
+        let parsedProductSizes: ProductSizeDto[] = [];
+        if (dto.productSizes) {
+            try {
+                // Parse chuỗi JSON thành mảng đối tượng
+                const rawProductSizes = JSON.parse(dto.productSizes);
 
-    if (sizeIds.length > 0) {
-        const validSizes = await this.prisma.size.findMany({
-            where: { id: { in: sizeIds } },
-        });
-        if (validSizes.length !== sizeIds.length) {
-            throw new BadRequestException('Một số sizeIds không hợp lệ');
+                // Nếu bạn muốn validate lại sau khi parse, hãy làm như sau:
+                if (!Array.isArray(rawProductSizes)) {
+                    throw new BadRequestException('Dữ liệu productSizes phải là một mảng.');
+                }
+
+                // Chuyển đổi và validate từng phần tử trong mảng
+                const validationErrors: ValidationError[] = [];
+                for (const item of rawProductSizes) {
+                    const instance = plainToInstance(ProductSizeDto, item);
+                    const errors = await validate(instance);
+                    if (errors.length > 0) {
+                        validationErrors.push(...errors);
+                    } else {
+                        parsedProductSizes.push(instance);
+                    }
+                }
+
+                if (validationErrors.length > 0) {
+                    this.logger.error('ProductSizes Validation Errors:', validationErrors);
+                    // Tạo thông báo lỗi chi tiết hơn từ validationErrors
+                    const errorMessages = validationErrors.map(err => Object.values(err.constraints || {})).flat();
+                    throw new BadRequestException(`Lỗi validation productSizes: ${errorMessages.join(', ')}`);
+                }
+
+            } catch (parseError: any) {
+                this.logger.error('Lỗi parse productSizes:', parseError);
+                throw new BadRequestException('Dữ liệu productSizes không hợp lệ (không phải JSON hoặc sai cấu trúc).');
+            }
         }
-    }
-
-    // Tạo product trước
+    // Tạo product trong database
     const product = await this.prisma.product.create({
       data: {
         title: dto.title,
@@ -85,44 +121,51 @@ export class ProductService {
         code: dto.code,
         thumb,
         images,
-        status: dto.status ?? 'Còn hàng',
+        status: dto.status ?? 'Còn hàng', // Đặt giá trị mặc định nếu status không được cung cấp
         tags,
-        ...numericFields,
+        ...numericFields, // Bao gồm price, discount, brandId, categoryId, colorId, weight
+        // --- Thêm weightUnit và unit vào đây ---
+        weightUnit: dto.weightUnit, // Gán trực tiếp vì đã có IsEnum validate
+        unit: dto.unit ?? 'cái', // Gán giá trị mặc định nếu unit không được cung cấp
       },
     });
 
-    // Thêm quan hệ size nếu có
-    if (sizeIds.length > 0) {
-      await this.prisma.productSize.createMany({
-        data: sizeIds.map((sizeId) => ({
-          productId: product.id,
-          sizeId,
-        })),
-        skipDuplicates: true,
-      });
+     // ⭐ LOGIC MỚI: Tạo các bản ghi ProductSize với quantity ⭐
+    if (parsedProductSizes.length > 0) {
+        await this.prisma.productSize.createMany({
+            data: parsedProductSizes.map((ps) => ({
+                productId: product.id,
+                sizeId: ps.sizeId,
+                quantity: ps.quantity ?? 0, // Default quantity to 0 if not provided in DTO
+            })),
+            skipDuplicates: true,
+        });
     }
 
-    // Trả về kết quả kèm theo size nếu muốn
-    const productWithSizes = await this.prisma.product.findUnique({
+    // Trả về kết quả kèm theo size (và các quan hệ khác nếu cần)
+    const productWithDetails = await this.prisma.product.findUnique({
       where: { id: product.id },
       include: {
-        size: {
+        size: { // Bao gồm thông tin size chi tiết
           include: {
             size: true,
           },
         },
+        brand: true, // Bao gồm thông tin brand
+        category: true, // Bao gồm thông tin category
+        color: true, // Bao gồm thông tin color
       },
     });
 
     return {
       success: true,
-      message: 'Product created successfully',
-      data: productWithSizes,
+      message: 'Sản phẩm đã được tạo thành công.',
+      data: productWithDetails,
     };
   }
 
   // Cập nhật sản phẩm với xử lý upload ảnh
-    async update(
+  async update(
     id: number,
     dto: UpdateProductDto,
     files: { thumb?: Express.Multer.File[]; images?: Express.Multer.File[] },
@@ -136,100 +179,90 @@ export class ProductService {
     });
 
     if (!product) {
-      throw new NotFoundException(`Không tìm thấy sản phẩm với ID ${id}`);
+      throw new NotFoundException(`Không tìm thấy sản phẩm với ID ${id}.`);
     }
 
     // 2. Chuẩn bị dữ liệu cập nhật
-    // Sử dụng partial để cho phép các trường không bắt buộc
     const updateData: Prisma.ProductUpdateInput = {};
 
-    // Gán các trường trực tiếp từ DTO nếu chúng tồn tại (trừ những trường cần xử lý đặc biệt)
+    // Gán các trường trực tiếp từ DTO nếu chúng tồn tại
+    // Các trường này đã được ValidationPipe và class-transformer xử lý (kiểu, chuyển đổi)
     if (dto.description !== undefined) updateData.description = dto.description;
     if (dto.code !== undefined) updateData.code = dto.code;
-    if (dto.status !== undefined) updateData.status = dto.status; // Nếu có trường status
+    if (dto.status !== undefined) updateData.status = dto.status;
+    if (dto.title !== undefined) updateData.title = dto.title;
 
+    if (dto.price !== undefined) updateData.price = dto.price;
+    if (dto.discount !== undefined) updateData.discount = dto.discount;
+    if (dto.brandId !== undefined) {
+      updateData.brand = dto.brandId === null ? { disconnect: true } : { connect: { id: dto.brandId } };
+    }
+    if (dto.categoryId !== undefined) {
+      updateData.category = dto.categoryId === null ? { disconnect: true } : { connect: { id: dto.categoryId } };
+    }
+    if (dto.colorId !== undefined) {
+      updateData.color = dto.colorId === null ? { disconnect: true } : { connect: { id: dto.colorId } };
+    }
+    if (dto.weight !== undefined) updateData.weight = dto.weight;
+    if (dto.weightUnit !== undefined) updateData.weightUnit = dto.weightUnit;
+    if (dto.unit !== undefined) updateData.unit = dto.unit;
 
-    // --- Bắt đầu logic xử lý Slug (Tích hợp trực tiếp) ---
+    // --- Bắt đầu logic xử lý Slug ---
     const isTitleChanged = dto.title !== undefined && dto.title !== product.title;
     const isSlugManuallyChanged = dto.slug !== undefined && dto.slug !== product.slug;
 
-    let newSlug: string | undefined; // Biến tạm để lưu slug mới
+    let newSlug: string | undefined;
 
     if (isSlugManuallyChanged) {
-        newSlug = dto.slug;
+      newSlug = dto.slug;
     } else if (isTitleChanged) {
-        if (typeof dto.title === 'string') {
-            newSlug = slugify(dto.title, { lower: true, strict: true });
-        } else {
-            console.error("Logic error: dto.title is not a string when isTitleChanged is true.");
-            throw new InternalServerErrorException("Lỗi logic nội bộ khi tạo slug cho sản phẩm.");
-        }
+      if (typeof dto.title === 'string') {
+        newSlug = slugify(dto.title, { lower: true, strict: true });
+      } else {
+        // Trường hợp này hiếm khi xảy ra nếu validationPipe hoạt động đúng
+        console.error(
+          'Lỗi logic: dto.title không phải chuỗi khi isTitleChanged là true.',
+        );
+        throw new InternalServerErrorException(
+          'Lỗi nội bộ khi tạo slug cho sản phẩm.',
+        );
+      }
     }
-    // Nếu cả title và slug đều không thay đổi hoặc không được cung cấp, newSlug sẽ là undefined.
 
-    // Gán slug vào updateData nếu có slug mới hoặc nếu DTO có slug và nó khác slug hiện tại của sản phẩm
     if (newSlug !== undefined && newSlug !== product.slug) {
-        // Kiểm tra tính duy nhất của slug MỚI
-        const existingProductWithSlug = await this.prisma.product.findUnique({
-            where: { slug: newSlug },
-        });
+      const existingProductWithSlug = await this.prisma.product.findUnique({
+        where: { slug: newSlug },
+      });
 
-        if (existingProductWithSlug && existingProductWithSlug.id !== product.id) {
-            throw new BadRequestException(`Sản phẩm với slug '${newSlug}' đã tồn tại.`);
-        }
-        updateData.slug = newSlug;
+      if (existingProductWithSlug && existingProductWithSlug.id !== product.id) {
+        throw new BadRequestException(
+          `Sản phẩm với slug '${newSlug}' đã tồn tại.`,
+        );
+      }
+      updateData.slug = newSlug;
     } else if (dto.slug !== undefined && dto.slug === product.slug) {
-        // Nếu client gửi slug nhưng nó giống với slug hiện có, không làm gì cả
-        // Hoặc có thể gán lại để đảm bảo (tùy thuộc vào thiết kế backend)
-        updateData.slug = dto.slug;
-    } else if (dto.slug === undefined && dto.title === undefined) {
-        // Nếu không có title hay slug trong DTO, giữ nguyên slug hiện tại của sản phẩm
-        updateData.slug = product.slug;
+      // Nếu client gửi slug nhưng nó giống với slug hiện có, gán lại để đảm bảo
+      updateData.slug = dto.slug;
     }
+    // Nếu dto.slug và dto.title đều undefined, slug hiện tại sẽ được giữ nguyên (không gán vào updateData)
     // --- Kết thúc logic xử lý Slug ---
 
-
-    // Xử lý tags
-    if (dto.tags) {
-      try {
-        updateData.tags =
-          typeof dto.tags === 'string' ? JSON.parse(dto.tags) : dto.tags;
-      } catch (error) {
-        throw new BadRequestException('Định dạng tags không hợp lệ');
-      }
+    // Xử lý tags (đã được @Transform trong DTO xử lý nếu gửi qua form-data)
+    if (dto.tags !== undefined) {
+      updateData.tags = dto.tags;
     }
-
-
-    // Chuyển đổi và xác thực các trường số
-    ['price', 'discount', 'brandId', 'categoryId', 'colorId'].forEach((field) => {
-      // Chỉ xử lý nếu trường đó có trong DTO
-      if (dto[field as keyof UpdateProductDto] !== undefined) {
-        if (dto[field as keyof UpdateProductDto] === null) {
-          // Nếu client gửi null, gán null (ví dụ để xóa brandId)
-          (updateData as any)[field] = null;
-        } else {
-          const value = Number(dto[field as keyof UpdateProductDto]);
-          if (isNaN(value)) {
-            throw new BadRequestException(`${field} phải là một số hợp lệ.`);
-          }
-          (updateData as any)[field] = value;
-        }
-      }
-    });
 
     // 3. Xử lý tải lên Thumb
     if (files?.thumb?.[0]) {
-      // Delete old thumbnail if it exists
+      // Xóa thumb cũ nếu có
       if (product.thumb) {
         const oldThumbPublicId = extractPublicId(product.thumb);
         if (oldThumbPublicId) {
           await this.uploadService.deleteImage(oldThumbPublicId);
         }
       }
-      // Upload new thumbnail
-      const {
-        secure_url
-      } = await this.uploadService.uploadImage(
+      // Tải lên thumb mới
+      const { secure_url } = await this.uploadService.uploadImage(
         files.thumb[0],
         id,
         'product',
@@ -237,21 +270,19 @@ export class ProductService {
       updateData.thumb = secure_url;
     }
 
-
     // 4. Xử lý tải lên Images (Thay thế tất cả ảnh hiện có nếu ảnh mới được cung cấp)
-    if (files?.images?.length) { // Nếu có file ảnh mới được tải lên
+    if (files?.images?.length) {
       // Xóa tất cả ảnh cũ
       if (product.images && product.images.length > 0) {
         const oldImagePublicIds = product.images
           .map(extractPublicId)
-          .filter((id): id is string => !!id);
+          .filter((_id): _id is string => !!_id);
         await Promise.all(
           oldImagePublicIds.map((publicId) =>
             this.uploadService.deleteImage(publicId),
           ),
         );
       }
-
       // Tải lên ảnh mới
       const uploadedImages = await Promise.all(
         files.images.map((file) =>
@@ -259,121 +290,109 @@ export class ProductService {
         ),
       );
       updateData.images = uploadedImages.map((img) => img.secure_url);
-    } else if (dto.images !== undefined) { // Nếu client gửi trường images trong DTO (có thể là mảng rỗng hoặc null)
-        let clientImagesValue: string[] | null = null;
-        if (typeof dto.images === 'string') {
-            try {
-                clientImagesValue = JSON.parse(dto.images);
-                if (!Array.isArray(clientImagesValue)) {
-                    throw new Error('Parsed images is not an array.');
-                }
-            } catch (e) {
-                throw new BadRequestException('Định dạng images không hợp lệ. Phải là mảng chuỗi JSON hoặc null.');
-            }
-        } else if (Array.isArray(dto.images)) {
-            clientImagesValue = dto.images;
-        } else if (dto.images === null) {
-            clientImagesValue = null;
+    } else if (dto.images !== undefined) {
+      // Nếu client gửi trường images trong DTO (có thể là mảng rỗng hoặc null)
+      // Dto.images đã là string[] hoặc null nhờ class-transformer
+      if (dto.images !== null && dto.images.length === 0) {
+        // Nếu client muốn xóa tất cả ảnh hiện có (gửi mảng rỗng)
+        if (product.images && product.images.length > 0) {
+          const oldImagePublicIds = product.images
+            .map(extractPublicId)
+            .filter((_id): _id is string => !!_id);
+          await Promise.all(
+            oldImagePublicIds.map((publicId) =>
+              this.uploadService.deleteImage(publicId),
+            ),
+          );
         }
-
-        if (clientImagesValue !== null && clientImagesValue.length === 0) {
-            // Nếu client muốn xóa tất cả ảnh hiện có (gửi mảng rỗng)
-            if (product.images && product.images.length > 0) {
-                const oldImagePublicIds = product.images
-                    .map(extractPublicId)
-                    .filter((id): id is string => !!id);
-                await Promise.all(
-                    oldImagePublicIds.map((publicId) =>
-                        this.uploadService.deleteImage(publicId),
-                    ),
-                );
-            }
-            updateData.images = []; // Đặt mảng ảnh thành rỗng
-        }
-        // Nếu clientImagesValue không rỗng, chúng ta giả định đó là các URL ảnh cũ mà client muốn giữ lại.
-        // Trong trường hợp này, updateData.images sẽ không được cập nhật,
-        // và Prisma sẽ tự động giữ lại mảng images hiện có trong DB.
-        // HƯỚNG DẪN: Nếu bạn muốn client gửi lại TẤT CẢ các URL ảnh mà họ muốn giữ, bạn sẽ cần logic phức tạp hơn
-        // để so sánh và chỉ xóa những ảnh không còn trong danh sách mới.
-        // Cách hiện tại: chỉ xóa nếu có file mới HOẶC client gửi rõ ràng mảng rỗng.
+        updateData.images = []; // Đặt mảng ảnh thành rỗng
+      }
+      // Nếu dto.images không rỗng và không phải file upload mới,
+      // giả định đó là các URL ảnh cũ mà client muốn giữ lại.
+      // updateData.images sẽ không được cập nhật, và Prisma sẽ tự động giữ lại
+      // mảng images hiện có trong DB nếu không có thay đổi.
     }
 
 
     // 5. Cập nhật Sản phẩm trong Cơ sở dữ liệu
-    // Loại bỏ sizeIds khỏi updateData trước khi update product chính
-    delete (updateData as any).sizeIds;
-    // Đảm bảo không ghi đè các trường đã được xử lý bằng file upload
-    delete (updateData as any).thumb; // Đã xử lý riêng
-    delete (updateData as any).images; // Đã xử lý riêng
-    // delete (updateData as any).slug; // Đã xử lý nếu có newSlug, nếu không sẽ là dto.slug hoặc product.slug
-
+    // Không cần delete thumb/images/slug từ updateData vì chúng đã được xử lý độc lập.
+    // Nếu chúng được gán vào updateData (ví dụ: newSlug), Prisma sẽ cập nhật.
     await this.prisma.product.update({
       where: { id },
       data: updateData,
     });
 
-    // 6. Xử lý liên kết Kích thước
-    if (dto.sizeIds !== undefined) { // Chỉ xử lý nếu sizeIds được cung cấp trong DTO
-      let sizeIdsToProcess: number[] = [];
-      try {
-        sizeIdsToProcess = Array.isArray(dto.sizeIds)
-          ? dto.sizeIds.map(Number)
-          : JSON.parse(dto.sizeIds as string).map(Number);
+ // 6. Xử lý liên kết Kích thước (ProductSize)
+    if (dto.productSizes !== undefined) {
+         const productSizesData: ProductSizeUpdateItemDto[] = dto.productSizes; 
+    
 
-        // Lọc bỏ các số không hợp lệ và đảm bảo tất cả đều hợp lệ
-        sizeIdsToProcess = sizeIdsToProcess.filter((sId) => !isNaN(sId) && sId > 0);
-
-        // Xác thực tất cả các sizeIds được cung cấp tồn tại trong bảng Size
-        if (sizeIdsToProcess.length > 0) {
-          const validSizes = await this.prisma.size.findMany({
-            where: { id: { in: sizeIdsToProcess } },
-          });
-          if (validSizes.length !== sizeIdsToProcess.length) {
-            throw new BadRequestException('Một hoặc nhiều sizeIds được cung cấp không hợp lệ.');
-          }
+        const sizeIdsFromDto = productSizesData.map(item => item.sizeId);
+        if (sizeIdsFromDto.length > 0) {
+            const validSizes = await this.prisma.size.findMany({
+                where: { id: { in: sizeIdsFromDto } },
+            });
+            if (validSizes.length !== sizeIdsFromDto.length) {
+                const invalidSizeIds = sizeIdsFromDto.filter(
+                    (sizeId) => !validSizes.some((s) => s.id === sizeId),
+                );
+                throw new BadRequestException(
+                    `Một hoặc nhiều ID kích thước không hợp lệ: ${invalidSizeIds.join(', ')}.`,
+                );
+            }
         }
-      } catch (error) {
-        throw new BadRequestException('Định dạng hoặc giá trị sizeIds không hợp lệ.');
-      }
 
-      // Sử dụng transaction để đảm bảo tính nguyên tử khi cập nhật quan hệ
-      await this.prisma.$transaction([
-        this.prisma.productSize.deleteMany({
-          where: { productId: id },
-        }),
-        this.prisma.productSize.createMany({
-          data: sizeIdsToProcess.map((sizeId) => ({
-            productId: id,
-            sizeId,
-          })),
-          skipDuplicates: true,
-        }),
-      ]);
+        await this.prisma.$transaction(async (prisma) => {
+            await prisma.productSize.deleteMany({
+                where: { productId: id },
+            });
+
+            if (productSizesData.length > 0) {
+                await prisma.productSize.createMany({
+                    data: productSizesData.map((item) => ({
+                        productId: id,
+                        sizeId: item.sizeId,
+                        quantity: item.quantity,
+                    })),
+                    skipDuplicates: true,
+                });
+            }
+        });
     }
-
 
     // 7. Lấy và trả về Sản phẩm đã cập nhật
     const finalProduct = await this.prisma.product.findUnique({
       where: { id },
       include: {
-        size: { include: { size: true } },
+        size: { include: { size: true } }, // Kích thước của sản phẩm thông qua ProductSize
+        brand: true,
+        category: true,
+        color: true,
       },
     });
 
     if (!finalProduct) {
-      throw new InternalServerErrorException('Không tìm thấy sản phẩm sau thao tác cập nhật.');
+      throw new InternalServerErrorException(
+        'Không tìm thấy sản phẩm sau thao tác cập nhật.',
+      );
     }
 
-    // Định dạng lại phản hồi để khớp với cấu trúc 'data' của phương thức create
+    // Định dạng lại phản hồi để khớp với frontend (sizes với quantity)
     const formattedProduct = {
       ...finalProduct,
-      sizes: finalProduct.size.map((item) => item.size),
+      sizes: finalProduct.size.map((item) => ({
+        id: item.size.id,
+        title: item.size.title,
+        quantity: item.quantity,
+        createdAt: item.size.createdAt,
+        updatedAt: item.size.updatedAt,
+      })),
     };
-    delete (formattedProduct as any).size; // Xóa mảng 'size' trung gian
+    delete (formattedProduct as any).size; // Xóa mảng 'size' trung gian để tránh trùng lặp
 
     return {
       success: true,
-      message: 'Cập nhật sản phẩm thành công',
+      message: 'Cập nhật sản phẩm thành công.',
       data: formattedProduct,
     };
   }
@@ -463,15 +482,16 @@ export class ProductService {
               },
             },
           },
-          size: {
-            include: {
-              size: {
-                select: {
-                  id: true,
-                  title: true,
-                },
+          size: { 
+              select: { 
+                  quantity: true, 
+                  size: { 
+                      select: {
+                          id: true,
+                          title: true,
+                      },
+                  },
               },
-            },
           },
           brand: {
             select: {
@@ -494,15 +514,16 @@ export class ProductService {
           },
           variants: {
             include: {
-              sizes: {
-                include: {
-                  size: {
-                    select: {
-                      id: true,
-                      title: true,
-                    },
+              sizes: { // This is the VariantSize join table
+                  select: { // Use select here too for quantity if VariantSize has it
+                      quantity: true, // ⭐ Nếu VariantSize cũng có quantity, thêm vào đây ⭐
+                      size: {
+                          select: {
+                              id: true,
+                              title: true,
+                          },
+                      },
                   },
-                },
               },
               color: {
                 select: {
@@ -521,10 +542,18 @@ export class ProductService {
 
     const result = products.map(({ size, variants, ...rest }) => ({
       ...rest,
-      sizes: size.map((s) => s.size), // product-level sizes
+      sizes: size.map((s) => ({
+        id: s.size.id,
+        title: s.size.title,
+        quantity: s.quantity, // Lấy quantity từ đối tượng 's' (ProductSize)
+      })),
       variants: variants.map((variant) => ({
         ...variant,
-        sizes: variant.sizes.map((s) => s.size), // variant-level sizes simplified
+         sizes: variant.sizes.map((s) => ({
+            id: s.size.id,
+            title: s.size.title,
+            quantity: s.quantity, // Giả sử VariantSize cũng có quantity
+        })),
       })),
     }));
 
@@ -868,35 +897,74 @@ export class ProductService {
     };
   }
 
-  async getSizesByProductId(productId: number) {
-    const product = await this.prisma.product.findUnique({
-      where: { id: productId },
-      include: {
-        size: {
-          include: {
-            size: {
-              select: {
-                id: true,
-                title: true,
-              },
+async getSizesByProductId(productId: number) {
+        // Define the specific payload type for your Prisma query to ensure type safety
+        type ProductWithProductSizesPayload = Prisma.ProductGetPayload<{
+            include: {
+                // The relation field name from your Product model is 'size' (singular)
+                size: {
+                    select: {
+                        // Select properties directly from the ProductSize join table
+                        sizeId: true;   // ID of the actual Size (e.g., S, M, L)
+                        quantity: true; // Quantity of the product for this size
+
+                        // Include the related Size model to get its id and title
+                        size: {
+                            select: {
+                                id: true;
+                                title: true;
+                            };
+                        };
+                    };
+                };
+            };
+        }>;
+
+        const product: ProductWithProductSizesPayload | null = await this.prisma.product.findUnique({
+            where: { id: productId },
+            include: {
+                // Use the correct relation field name: 'size' (as per your schema.prisma)
+                size: {
+                    select: {
+                        quantity: true, // Select the quantity from the ProductSize model
+                        sizeId: true,   // Select the sizeId from ProductSize
+
+                        // This 'size' refers to the actual Size model linked via ProductSize
+                        size: {
+                            select: {
+                                id: true,
+                                title: true,
+                                // If you need createdAt/updatedAt for the actual Size,
+                                // select them here:
+                                // createdAt: true,
+                                // updatedAt: true,
+                            },
+                        },
+                    },
+                },
             },
-          },
-        },
-      },
-    });
+        });
 
-    if (!product) {
-      throw new NotFoundException(`Product with ID ${productId} not found`);
+        if (!product) {
+            throw new NotFoundException(`Product with ID ${productId} not found`);
+        }
+
+        // Map the results to match your ProductSizeDetail interface
+        // Prisma will return an empty array for `product.size` if no sizes are linked,
+        // so no need for the `!Array.isArray()` check here.
+        const sizesWithQuantity: ProductSizeDetail[] = product.size.map((ps) => ({
+            productId: product.id,    // Get the product's ID
+            sizeId: ps.size.id,       // Get the actual size ID from the nested 'size' object
+            title: ps.size.title,     // Get the title from the nested 'size' object
+            quantity: ps.quantity,    // Get the quantity directly from the 'ProductSize' object (ps)
+        }));
+
+        return {
+            success: true,
+            message: `Sizes for product ID ${productId} fetched successfully`,
+            data: sizesWithQuantity,
+        };
     }
-
-    const sizes = product.size.map((ps) => ps.size);
-
-    return {
-      success: true,
-      message: `Sizes for product ID ${productId} fetched successfully`,
-      data: sizes,
-    };
-  }
 
   async findProductsByCategorySlug(
     categorySlug: string,

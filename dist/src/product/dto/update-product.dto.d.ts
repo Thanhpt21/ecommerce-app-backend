@@ -1,3 +1,8 @@
+import { WeightUnit } from '../enums/product.enums';
+export declare class ProductSizeUpdateItemDto {
+    sizeId: number;
+    quantity: number;
+}
 export declare class UpdateProductDto {
     title?: string;
     slug?: string;
@@ -12,5 +17,8 @@ export declare class UpdateProductDto {
     colorId?: number;
     thumb?: string;
     images?: string[];
-    sizeIds?: number[];
+    productSizes?: ProductSizeUpdateItemDto[];
+    weight?: number;
+    weightUnit?: WeightUnit;
+    unit?: string;
 }

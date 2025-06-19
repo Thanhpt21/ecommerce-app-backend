@@ -41,10 +41,10 @@ export declare class RatingService {
         message: string;
         data: ({
             postedBy: {
-                id: number;
                 name: string;
                 email: string;
                 profilePicture: string | null;
+                id: number;
             };
         } & {
             id: number;
@@ -61,10 +61,10 @@ export declare class RatingService {
     }>;
     findOne(id: number): Promise<({
         postedBy: {
-            id: number;
             name: string;
             email: string;
             profilePicture: string | null;
+            id: number;
         };
     } & {
         id: number;

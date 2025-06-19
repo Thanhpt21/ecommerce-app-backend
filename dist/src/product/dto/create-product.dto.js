@@ -9,9 +9,26 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateProductDto = void 0;
+exports.CreateProductDto = exports.ProductSizeDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
+const product_enums_1 = require("../enums/product.enums");
+class ProductSizeDto {
+    sizeId;
+    quantity;
+}
+exports.ProductSizeDto = ProductSizeDto;
+__decorate([
+    (0, class_validator_1.IsInt)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], ProductSizeDto.prototype, "sizeId", void 0);
+__decorate([
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], ProductSizeDto.prototype, "quantity", void 0);
 class CreateProductDto {
     title;
     description;
@@ -24,7 +41,10 @@ class CreateProductDto {
     categoryId;
     colorId;
     thumb;
-    sizeIds;
+    productSizes;
+    weight;
+    weightUnit;
+    unit;
 }
 exports.CreateProductDto = CreateProductDto;
 __decorate([
@@ -80,9 +100,25 @@ __decorate([
     __metadata("design:type", String)
 ], CreateProductDto.prototype, "thumb", void 0);
 __decorate([
-    (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.IsInt)({ each: true }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDto.prototype, "productSizes", void 0);
+__decorate([
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     (0, class_transformer_1.Type)(() => Number),
-    __metadata("design:type", Array)
-], CreateProductDto.prototype, "sizeIds", void 0);
+    __metadata("design:type", Number)
+], CreateProductDto.prototype, "weight", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(product_enums_1.WeightUnit),
+    __metadata("design:type", String)
+], CreateProductDto.prototype, "weightUnit", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], CreateProductDto.prototype, "unit", void 0);
 //# sourceMappingURL=create-product.dto.js.map

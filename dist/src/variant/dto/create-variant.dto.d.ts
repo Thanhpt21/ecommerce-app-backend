@@ -1,3 +1,7 @@
+export declare class VariantSizeDto {
+    sizeId: number;
+    quantity?: number;
+}
 export declare class CreateVariantDto {
     title: string;
     price: number;
@@ -7,5 +11,5 @@ export declare class CreateVariantDto {
     sku?: string;
     productId: number;
     colorId?: number;
-    sizeIds?: number[] | string;
+    variantSizes?: string;
 }

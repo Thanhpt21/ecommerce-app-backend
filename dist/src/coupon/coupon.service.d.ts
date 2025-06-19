@@ -16,8 +16,8 @@ export declare class CouponService {
             code: string;
             discount: number;
             usageLimit: number;
-            usedCount: number;
             minOrderValue: number;
+            usedCount: number;
         };
     }>;
     findAll(page?: number, limit?: number, search?: string): Promise<{
@@ -32,8 +32,8 @@ export declare class CouponService {
             code: string;
             discount: number;
             usageLimit: number;
-            usedCount: number;
             minOrderValue: number;
+            usedCount: number;
         }[];
         total: number;
         page: number;
@@ -51,8 +51,8 @@ export declare class CouponService {
             code: string;
             discount: number;
             usageLimit: number;
-            usedCount: number;
             minOrderValue: number;
+            usedCount: number;
         };
     }>;
     update(id: number, dto: UpdateCouponDto): Promise<{
@@ -67,8 +67,8 @@ export declare class CouponService {
             code: string;
             discount: number;
             usageLimit: number;
-            usedCount: number;
             minOrderValue: number;
+            usedCount: number;
         };
     }>;
     remove(id: number): Promise<{

@@ -21,6 +21,9 @@ async function bootstrap() {
     transform: true, // ⭐ BẬT TÍNH NĂNG TỰ ĐỘNG CHUYỂN ĐỔI KIỂU DỮ LIỆU ⭐
     whitelist: true, // Loại bỏ các trường không định nghĩa trong DTO
     forbidNonWhitelisted: true, // Ném lỗi nếu có trường không được phép
+    transformOptions: {
+      enableImplicitConversion: true, // Tùy chọn, có thể giúp trong một số trường hợp
+    },
   }));
 
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
