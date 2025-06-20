@@ -12,4 +12,8 @@ export declare class CreateConfigDto {
     x?: string;
     linkedin?: string;
     logo?: string;
+    pick_province?: string;
+    pick_district?: string;
+    pick_ward?: string;
+    pick_address?: string;
 }

@@ -125,6 +125,11 @@ model Config {
   logo      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  pick_province String? // Tên tỉnh/thành phố lấy hàng mặc định
+  pick_district String? // Tên quận/huyện lấy hàng mặc định
+  pick_ward     String? // Tên phường/xã lấy hàng mặc định
+  pick_address  String? // Địa chỉ chi tiết lấy hàng mặc định (số nhà, tên đường, ...)
 }
 
 model Store {
@@ -311,6 +316,10 @@ model Order {
   finalAmount    Float
 
   cancelReason String?
+
+  ghtkLabel String?
+  ghtkStatus String?
+  ghtkTrackingUrl String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

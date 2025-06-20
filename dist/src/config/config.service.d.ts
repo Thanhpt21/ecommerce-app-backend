@@ -26,6 +26,10 @@ export declare class ConfigService {
             x: string | null;
             linkedin: string | null;
             logo: string | null;
+            pick_province: string | null;
+            pick_district: string | null;
+            pick_ward: string | null;
+            pick_address: string | null;
         };
     }>;
     findOne(id: number): Promise<{
@@ -48,6 +52,10 @@ export declare class ConfigService {
             x: string | null;
             linkedin: string | null;
             logo: string | null;
+            pick_province: string | null;
+            pick_district: string | null;
+            pick_ward: string | null;
+            pick_address: string | null;
         };
     }>;
     update(id: number, dto: UpdateConfigDto, file?: Express.Multer.File): Promise<{
@@ -70,6 +78,10 @@ export declare class ConfigService {
             x: string | null;
             linkedin: string | null;
             logo: string | null;
+            pick_province: string | null;
+            pick_district: string | null;
+            pick_ward: string | null;
+            pick_address: string | null;
         };
     }>;
 }

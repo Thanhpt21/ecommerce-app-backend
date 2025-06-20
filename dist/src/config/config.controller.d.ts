@@ -24,6 +24,10 @@ export declare class ConfigController {
             x: string | null;
             linkedin: string | null;
             logo: string | null;
+            pick_province: string | null;
+            pick_district: string | null;
+            pick_ward: string | null;
+            pick_address: string | null;
         };
     }>;
     getOne(id: string): Promise<{
@@ -46,6 +50,10 @@ export declare class ConfigController {
             x: string | null;
             linkedin: string | null;
             logo: string | null;
+            pick_province: string | null;
+            pick_district: string | null;
+            pick_ward: string | null;
+            pick_address: string | null;
         };
     }>;
     update(id: string, dto: UpdateConfigDto, file: Express.Multer.File): Promise<{
@@ -68,6 +76,10 @@ export declare class ConfigController {
             x: string | null;
             linkedin: string | null;
             logo: string | null;
+            pick_province: string | null;
+            pick_district: string | null;
+            pick_ward: string | null;
+            pick_address: string | null;
         };
     }>;
 }

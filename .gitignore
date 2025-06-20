@@ -32,8 +32,7 @@ dist/          # NestJS build output
 
 # Docker
 *.dockerignore
-.dockerignore # Loại trừ chính file này nếu bạn muốn (thường thì không)
-# Các file Docker image/container tạm thời nếu có
+.dockerignore
 .env.docker
 
 # NestJS specific

@@ -119,6 +119,9 @@ export declare class OrderService {
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            ghtkLabel: string | null;
+            ghtkStatus: string | null;
+            ghtkTrackingUrl: string | null;
         };
     }>;
     findAll(userId: any, page?: number, limit?: number, search?: string, statusFilter?: string, paymentMethodFilter?: string): Promise<{
@@ -356,6 +359,9 @@ export declare class OrderService {
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            ghtkLabel: string | null;
+            ghtkStatus: string | null;
+            ghtkTrackingUrl: string | null;
         };
     }>;
     update(id: number, dto: UpdateOrderDto): Promise<{
@@ -446,6 +452,9 @@ export declare class OrderService {
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            ghtkLabel: string | null;
+            ghtkStatus: string | null;
+            ghtkTrackingUrl: string | null;
         };
     }>;
     remove(id: number): Promise<{
@@ -471,6 +480,9 @@ export declare class OrderService {
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            ghtkLabel: string | null;
+            ghtkStatus: string | null;
+            ghtkTrackingUrl: string | null;
         };
     }>;
     private incrementCouponUsage;

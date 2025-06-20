@@ -14,4 +14,8 @@ export class CreateConfigDto {
   @IsOptional() @IsString() x?: string;
   @IsOptional() @IsString() linkedin?: string;
   @IsOptional() @IsString() logo?: string;
+  @IsOptional() @IsString() pick_province?: string;
+  @IsOptional() @IsString() pick_district?: string;
+  @IsOptional() @IsString() pick_ward?: string;
+  @IsOptional() @IsString() pick_address?: string;
 }

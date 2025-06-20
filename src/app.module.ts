@@ -24,6 +24,7 @@ import { BlogModule } from './blog/blog.module';
 import { ShippingAddressModule } from './shipping-address/shipping-address.module';
 import { OrderModule } from './order/order.module';
 import { ContactModule } from './contact/contact.module';
+import { GhtkModule } from './ghtk/ghtk.module';
 
 @Module({
   imports: [
@@ -50,7 +51,8 @@ import { ContactModule } from './contact/contact.module';
     BlogModule,
     ShippingAddressModule,
     OrderModule,
-    ContactModule
+    ContactModule,
+    GhtkModule
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService, JwtStrategy],

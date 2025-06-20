@@ -33,6 +33,7 @@ const blog_module_1 = require("./blog/blog.module");
 const shipping_address_module_1 = require("./shipping-address/shipping-address.module");
 const order_module_1 = require("./order/order.module");
 const contact_module_1 = require("./contact/contact.module");
+const ghtk_module_1 = require("./ghtk/ghtk.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -62,7 +63,8 @@ exports.AppModule = AppModule = __decorate([
             blog_module_1.BlogModule,
             shipping_address_module_1.ShippingAddressModule,
             order_module_1.OrderModule,
-            contact_module_1.ContactModule
+            contact_module_1.ContactModule,
+            ghtk_module_1.GhtkModule
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService, prisma_service_1.PrismaService, jwt_strategy_1.JwtStrategy],

@@ -120,6 +120,9 @@ export declare class OrderController {
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            ghtkLabel: string | null;
+            ghtkStatus: string | null;
+            ghtkTrackingUrl: string | null;
         };
     }>;
     findAll(page: number | undefined, limit: number | undefined, search: string | undefined, user: UserResponseDto, statusFilter?: string, paymentMethodFilter?: string): Promise<{
@@ -357,6 +360,9 @@ export declare class OrderController {
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            ghtkLabel: string | null;
+            ghtkStatus: string | null;
+            ghtkTrackingUrl: string | null;
         };
     }>;
     update(id: string, dto: UpdateOrderDto): Promise<{
@@ -447,6 +453,9 @@ export declare class OrderController {
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            ghtkLabel: string | null;
+            ghtkStatus: string | null;
+            ghtkTrackingUrl: string | null;
         };
     }>;
     remove(id: string): Promise<{
@@ -472,6 +481,9 @@ export declare class OrderController {
             totalAmount: number;
             finalAmount: number;
             cancelReason: string | null;
+            ghtkLabel: string | null;
+            ghtkStatus: string | null;
+            ghtkTrackingUrl: string | null;
         };
     }>;
 }

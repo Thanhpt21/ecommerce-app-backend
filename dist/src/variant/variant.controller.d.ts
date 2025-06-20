@@ -13,35 +13,35 @@ export declare class VariantController {
         data: ({
             color: {
                 id: number;
-                title: string;
                 createdAt: Date;
                 updatedAt: Date;
+                title: string;
                 code: string;
             } | null;
             sizes: ({
                 size: {
                     id: number;
-                    title: string;
                     createdAt: Date;
                     updatedAt: Date;
+                    title: string;
                 };
             } & {
-                variantId: number;
                 sizeId: number;
                 quantity: number;
+                variantId: number;
             })[];
         } & {
             id: number;
-            title: string;
-            price: number;
-            discount: number;
-            thumb: string;
-            images: string[];
-            sku: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: number;
+            title: string;
+            discount: number;
+            price: number;
             colorId: number | null;
+            thumb: string;
+            images: string[];
+            productId: number;
+            sku: string;
         }) | null;
     }>;
     findAll(productId: string, page?: number, limit?: number, search?: string): Promise<{
@@ -58,16 +58,16 @@ export declare class VariantController {
                 code: string;
             } | null;
             id: number;
-            title: string;
-            price: number;
-            discount: number;
-            thumb: string;
-            images: string[];
-            sku: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: number;
+            title: string;
+            discount: number;
+            price: number;
             colorId: number | null;
+            thumb: string;
+            images: string[];
+            productId: number;
+            sku: string;
         }[];
         total: number;
         page: number;
@@ -81,16 +81,16 @@ export declare class VariantController {
                 title: string;
             }[];
             id: number;
-            title: string;
-            price: number;
-            discount: number;
-            thumb: string;
-            images: string[];
-            sku: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: number;
+            title: string;
+            discount: number;
+            price: number;
             colorId: number | null;
+            thumb: string;
+            images: string[];
+            productId: number;
+            sku: string;
         }[];
         total: number;
         page: number;
@@ -112,22 +112,22 @@ export declare class VariantController {
             }[];
             color: {
                 id: number;
-                title: string;
                 createdAt: Date;
                 updatedAt: Date;
+                title: string;
                 code: string;
             } | null;
             id: number;
-            title: string;
-            price: number;
-            discount: number;
-            thumb: string;
-            images: string[];
-            sku: string;
             createdAt: Date;
             updatedAt: Date;
-            productId: number;
+            title: string;
+            discount: number;
+            price: number;
             colorId: number | null;
+            thumb: string;
+            images: string[];
+            productId: number;
+            sku: string;
         };
     }>;
     remove(id: number): Promise<{

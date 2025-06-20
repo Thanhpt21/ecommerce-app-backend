@@ -25,6 +25,10 @@ class CreateConfigDto {
     x;
     linkedin;
     logo;
+    pick_province;
+    pick_district;
+    pick_ward;
+    pick_address;
 }
 exports.CreateConfigDto = CreateConfigDto;
 __decorate([
@@ -92,4 +96,24 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateConfigDto.prototype, "logo", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateConfigDto.prototype, "pick_province", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateConfigDto.prototype, "pick_district", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateConfigDto.prototype, "pick_ward", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateConfigDto.prototype, "pick_address", void 0);
 //# sourceMappingURL=create-config.dto.js.map
