@@ -28,6 +28,8 @@ export declare class ConfigController {
             pick_district: string | null;
             pick_ward: string | null;
             pick_address: string | null;
+            pick_tel: string | null;
+            pick_name: string | null;
         };
     }>;
     getOne(id: string): Promise<{
@@ -54,6 +56,8 @@ export declare class ConfigController {
             pick_district: string | null;
             pick_ward: string | null;
             pick_address: string | null;
+            pick_tel: string | null;
+            pick_name: string | null;
         };
     }>;
     update(id: string, dto: UpdateConfigDto, file: Express.Multer.File): Promise<{
@@ -80,6 +84,8 @@ export declare class ConfigController {
             pick_district: string | null;
             pick_ward: string | null;
             pick_address: string | null;
+            pick_tel: string | null;
+            pick_name: string | null;
         };
     }>;
 }

@@ -1,10 +1,14 @@
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from 'prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { CancelOrderDto } from './dto/cancel-order.dto';
+import { GhtkService } from 'src/ghtk/ghtk.service';
 export declare class OrderService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private ghtkService;
+    private readonly logger;
+    constructor(prisma: PrismaService, ghtkService: GhtkService);
     create(dto: CreateOrderDto, userId: number): Promise<{
         success: boolean;
         message: string;
@@ -21,25 +25,21 @@ export declare class OrderService {
                 minOrderValue: number;
                 usedCount: number;
             } | null;
-            shipping: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                provinceName: string;
-                fee: number;
-            } | null;
             shippingAddress: {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
+                wardId: number | null;
+                districtId: number | null;
+                provinceId: number | null;
                 isDefault: boolean;
-                userId: number;
             };
             items: ({
                 size: {
@@ -112,7 +112,6 @@ export declare class OrderService {
             userId: number;
             paymentMethod: string;
             shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
             note: string | null;
             couponId: number | null;
@@ -122,6 +121,7 @@ export declare class OrderService {
             ghtkLabel: string | null;
             ghtkStatus: string | null;
             ghtkTrackingUrl: string | null;
+            ghtkCodAmount: Prisma.Decimal | null;
         };
     }>;
     findAll(userId: any, page?: number, limit?: number, search?: string, statusFilter?: string, paymentMethodFilter?: string): Promise<{
@@ -172,23 +172,16 @@ export declare class OrderService {
             shippingAddress: {
                 id: number;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
-                userId: number;
             };
             user: {
                 email: string;
             };
-            shipping: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                provinceName: string;
-                fee: number;
-            } | null;
             shippingFee: number | null;
         }[];
         total: number;
@@ -243,23 +236,16 @@ export declare class OrderService {
             shippingAddress: {
                 id: number;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
-                userId: number;
             };
             user: {
                 email: string;
             };
-            shipping: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                provinceName: string;
-                fee: number;
-            } | null;
             coupon: {
                 id: number;
                 expiresAt: Date;
@@ -289,22 +275,15 @@ export declare class OrderService {
                 usageLimit: number;
                 usedCount: number;
             } | null;
-            shipping: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                provinceName: string;
-                fee: number;
-            } | null;
             shippingAddress: {
                 id: number;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
-                userId: number;
             };
             items: ({
                 size: {
@@ -352,7 +331,6 @@ export declare class OrderService {
             userId: number;
             paymentMethod: string;
             shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
             note: string | null;
             couponId: number | null;
@@ -362,6 +340,7 @@ export declare class OrderService {
             ghtkLabel: string | null;
             ghtkStatus: string | null;
             ghtkTrackingUrl: string | null;
+            ghtkCodAmount: Prisma.Decimal | null;
         };
     }>;
     update(id: number, dto: UpdateOrderDto): Promise<{
@@ -373,13 +352,16 @@ export declare class OrderService {
                 createdAt: Date;
                 updatedAt: Date;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
+                wardId: number | null;
+                districtId: number | null;
+                provinceId: number | null;
                 isDefault: boolean;
-                userId: number;
             };
             items: ({
                 size: {
@@ -445,7 +427,6 @@ export declare class OrderService {
             userId: number;
             paymentMethod: string;
             shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
             note: string | null;
             couponId: number | null;
@@ -455,6 +436,7 @@ export declare class OrderService {
             ghtkLabel: string | null;
             ghtkStatus: string | null;
             ghtkTrackingUrl: string | null;
+            ghtkCodAmount: Prisma.Decimal | null;
         };
     }>;
     remove(id: number): Promise<{
@@ -473,7 +455,6 @@ export declare class OrderService {
             userId: number;
             paymentMethod: string;
             shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
             note: string | null;
             couponId: number | null;
@@ -483,6 +464,7 @@ export declare class OrderService {
             ghtkLabel: string | null;
             ghtkStatus: string | null;
             ghtkTrackingUrl: string | null;
+            ghtkCodAmount: Prisma.Decimal | null;
         };
     }>;
     private incrementCouponUsage;

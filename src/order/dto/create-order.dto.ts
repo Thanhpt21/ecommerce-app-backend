@@ -42,8 +42,6 @@ export class CreateOrderDto {
   @IsNumber()
   shippingAddressId: number;
   
-  @IsNumber()
-  shippingId?: number;
 
   @ValidateIf((o) => o.shippingId === undefined || o.shippingId === null)
   @IsNumber()

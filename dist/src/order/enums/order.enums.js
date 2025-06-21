@@ -4,10 +4,13 @@ exports.PaymentMethod = exports.OrderStatus = void 0;
 var OrderStatus;
 (function (OrderStatus) {
     OrderStatus["PENDING"] = "pending";
+    OrderStatus["CONFIRMED"] = "confirmed";
     OrderStatus["PAID"] = "paid";
     OrderStatus["SHIPPING"] = "shipping";
+    OrderStatus["DELIVERED"] = "delivered";
     OrderStatus["COMPLETED"] = "completed";
     OrderStatus["CANCELLED"] = "cancelled";
+    OrderStatus["RETURNED"] = "returned";
 })(OrderStatus || (exports.OrderStatus = OrderStatus = {}));
 var PaymentMethod;
 (function (PaymentMethod) {

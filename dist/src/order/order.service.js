@@ -8,31 +8,36 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var OrderService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OrderService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
-let OrderService = class OrderService {
+const ghtk_service_1 = require("../ghtk/ghtk.service");
+const order_enums_1 = require("./enums/order.enums");
+let OrderService = OrderService_1 = class OrderService {
     prisma;
-    constructor(prisma) {
+    ghtkService;
+    logger = new common_1.Logger(OrderService_1.name);
+    constructor(prisma, ghtkService) {
         this.prisma = prisma;
+        this.ghtkService = ghtkService;
     }
     async create(dto, userId) {
         const order = await this.prisma.$transaction(async (tx) => {
-            const { items, status, paymentMethod, shippingAddressId, note, couponId, shippingId, shippingFee } = dto;
+            const { items, status, paymentMethod, shippingAddressId, note, couponId, shippingFee } = dto;
+            const finalStatus = status || order_enums_1.OrderStatus.PENDING;
+            const finalPaymentMethod = paymentMethod || order_enums_1.PaymentMethod.COD;
             const enrichedItems = await Promise.all(items.map(async (item) => {
+                let productData;
                 if (item.variantId) {
                     const variant = await tx.variant.findUnique({
                         where: { id: item.variantId },
-                        select: { price: true, discount: true },
+                        select: { price: true, discount: true, productId: true },
                     });
                     if (!variant)
-                        throw new common_1.NotFoundException('Variant not found');
-                    return {
-                        ...item,
-                        price: variant.price,
-                        discount: variant.discount,
-                    };
+                        throw new common_1.NotFoundException(`Variant with ID ${item.variantId} not found.`);
+                    productData = { price: variant.price, discount: variant.discount };
                 }
                 else if (item.productId) {
                     const product = await tx.product.findUnique({
@@ -40,16 +45,17 @@ let OrderService = class OrderService {
                         select: { price: true, discount: true },
                     });
                     if (!product)
-                        throw new common_1.NotFoundException('Product not found');
-                    return {
-                        ...item,
-                        price: product.price,
-                        discount: product.discount,
-                    };
+                        throw new common_1.NotFoundException(`Product with ID ${item.productId} not found.`);
+                    productData = { price: product.price, discount: product.discount };
                 }
                 else {
-                    throw new common_1.NotFoundException('Item must have either productId or variantId');
+                    throw new common_1.BadRequestException('Order item must have either productId or variantId.');
                 }
+                return {
+                    ...item,
+                    price: productData.price,
+                    discount: productData.discount,
+                };
             }));
             let totalAmount = 0;
             let productDiscountAmount = 0;
@@ -63,54 +69,32 @@ let OrderService = class OrderService {
                     where: { id: couponId },
                 });
                 if (!coupon)
-                    throw new common_1.NotFoundException('Coupon not found');
+                    throw new common_1.NotFoundException('Coupon not found.');
                 const now = new Date();
                 if (coupon.expiresAt && coupon.expiresAt < now) {
-                    throw new common_1.ForbiddenException('Coupon is expired');
+                    throw new common_1.ForbiddenException('Coupon is expired.');
                 }
                 if (coupon.usageLimit !== null && coupon.usedCount >= coupon.usageLimit) {
-                    throw new common_1.ForbiddenException('Coupon usage limit exceeded');
+                    throw new common_1.ForbiddenException('Coupon usage limit exceeded.');
                 }
                 if (coupon.minOrderValue && totalAmount < coupon.minOrderValue) {
-                    throw new common_1.ForbiddenException(`Order must be at least ${coupon.minOrderValue.toLocaleString('vi-VN')} to use this coupon`);
+                    throw new common_1.ForbiddenException(`Order must be at least ${coupon.minOrderValue.toLocaleString('vi-VN')} to use this coupon.`);
                 }
                 couponDiscount = coupon.discount ?? 0;
             }
-            let calculatedShippingFee = 0;
-            let finalShippingId = null;
-            if (shippingFee !== undefined && shippingFee !== null) {
-                calculatedShippingFee = shippingFee;
-                finalShippingId = null;
-            }
-            else if (shippingId !== undefined && shippingId !== null) {
-                const shippingInfo = await tx.shipping.findUnique({
-                    where: { id: shippingId },
-                });
-                if (shippingInfo) {
-                    calculatedShippingFee = shippingInfo.fee;
-                    finalShippingId = shippingInfo.id;
-                }
-                else {
-                    throw new common_1.BadRequestException(`Shipping method with ID ${shippingId} not found.`);
-                }
-            }
-            else {
-                throw new common_1.BadRequestException('Shipping fee is required if no shipping method is selected.');
-            }
-            const finalAmount = totalAmount - productDiscountAmount - couponDiscount + calculatedShippingFee;
+            const finalAmount = totalAmount - productDiscountAmount - couponDiscount + 0;
             if (finalAmount < 0) {
-                throw new common_1.BadRequestException('Final amount cannot be negative');
+                throw new common_1.BadRequestException('Final order amount cannot be negative.');
             }
             const createdOrder = await tx.order.create({
                 data: {
                     userId,
-                    status,
-                    paymentMethod,
+                    status: finalStatus,
+                    paymentMethod: finalPaymentMethod,
                     note,
                     shippingAddressId,
                     couponId,
-                    shippingId,
-                    shippingFee: calculatedShippingFee,
+                    shippingFee: shippingFee,
                     totalAmount: totalAmount,
                     discountAmount: productDiscountAmount + couponDiscount,
                     finalAmount: finalAmount,
@@ -137,17 +121,19 @@ let OrderService = class OrderService {
                     },
                     shippingAddress: true,
                     coupon: true,
-                    shipping: true,
                 },
             });
             if (couponId) {
-                await this.incrementCouponUsage(couponId, tx);
+                await tx.coupon.update({
+                    where: { id: couponId },
+                    data: { usedCount: { increment: 1 } },
+                });
             }
             return createdOrder;
         });
         return {
             success: true,
-            message: 'Order created successfully',
+            message: 'Order created successfully!',
             data: order,
         };
     }
@@ -232,7 +218,6 @@ let OrderService = class OrderService {
                             email: true,
                         },
                     },
-                    shipping: true,
                 },
             }),
             this.prisma.order.count({ where }),
@@ -278,7 +263,6 @@ let OrderService = class OrderService {
             })),
             shippingAddress: order.shippingAddress,
             user: order.user,
-            shipping: order.shipping,
             shippingFee: order.shippingFee,
         }));
         return {
@@ -361,7 +345,6 @@ let OrderService = class OrderService {
                             email: true,
                         },
                     },
-                    shipping: true,
                 },
             }),
             this.prisma.order.count({ where }),
@@ -407,7 +390,6 @@ let OrderService = class OrderService {
             })),
             shippingAddress: order.shippingAddress,
             user: order.user,
-            shipping: order.shipping,
             coupon: order.coupon,
             shippingFee: order.shippingFee,
         }));
@@ -490,7 +472,6 @@ let OrderService = class OrderService {
                         email: true,
                     },
                 },
-                shipping: true,
             },
         });
         if (!order)
@@ -587,8 +568,8 @@ let OrderService = class OrderService {
     }
 };
 exports.OrderService = OrderService;
-exports.OrderService = OrderService = __decorate([
+exports.OrderService = OrderService = OrderService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService, ghtk_service_1.GhtkService])
 ], OrderService);
 //# sourceMappingURL=order.service.js.map

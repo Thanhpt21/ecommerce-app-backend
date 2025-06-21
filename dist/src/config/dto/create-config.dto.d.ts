@@ -16,4 +16,6 @@ export declare class CreateConfigDto {
     pick_district?: string;
     pick_ward?: string;
     pick_address?: string;
+    pick_tel?: string;
+    pick_name?: string;
 }

@@ -10,7 +10,6 @@ export declare class CreateOrderDto {
     status?: OrderStatus;
     paymentMethod?: PaymentMethod;
     shippingAddressId: number;
-    shippingId?: number;
     shippingFee?: number;
     note?: string;
     couponId?: number;

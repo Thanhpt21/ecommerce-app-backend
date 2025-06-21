@@ -18,4 +18,6 @@ export class CreateConfigDto {
   @IsOptional() @IsString() pick_district?: string;
   @IsOptional() @IsString() pick_ward?: string;
   @IsOptional() @IsString() pick_address?: string;
+  @IsOptional() @IsString() pick_tel?: string;   // Đã thêm
+  @IsOptional() @IsString() pick_name?: string;  // Đã thêm
 }

@@ -22,25 +22,21 @@ export declare class OrderController {
                 minOrderValue: number;
                 usedCount: number;
             } | null;
-            shipping: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                provinceName: string;
-                fee: number;
-            } | null;
             shippingAddress: {
                 id: number;
                 createdAt: Date;
                 updatedAt: Date;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
+                wardId: number | null;
+                districtId: number | null;
+                provinceId: number | null;
                 isDefault: boolean;
-                userId: number;
             };
             items: ({
                 size: {
@@ -113,7 +109,6 @@ export declare class OrderController {
             userId: number;
             paymentMethod: string;
             shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
             note: string | null;
             couponId: number | null;
@@ -123,6 +118,7 @@ export declare class OrderController {
             ghtkLabel: string | null;
             ghtkStatus: string | null;
             ghtkTrackingUrl: string | null;
+            ghtkCodAmount: import("@prisma/client/runtime/library").Decimal | null;
         };
     }>;
     findAll(page: number | undefined, limit: number | undefined, search: string | undefined, user: UserResponseDto, statusFilter?: string, paymentMethodFilter?: string): Promise<{
@@ -173,23 +169,16 @@ export declare class OrderController {
             shippingAddress: {
                 id: number;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
-                userId: number;
             };
             user: {
                 email: string;
             };
-            shipping: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                provinceName: string;
-                fee: number;
-            } | null;
             shippingFee: number | null;
         }[];
         total: number;
@@ -244,23 +233,16 @@ export declare class OrderController {
             shippingAddress: {
                 id: number;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
-                userId: number;
             };
             user: {
                 email: string;
             };
-            shipping: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                provinceName: string;
-                fee: number;
-            } | null;
             coupon: {
                 id: number;
                 expiresAt: Date;
@@ -290,22 +272,15 @@ export declare class OrderController {
                 usageLimit: number;
                 usedCount: number;
             } | null;
-            shipping: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                provinceName: string;
-                fee: number;
-            } | null;
             shippingAddress: {
                 id: number;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
-                userId: number;
             };
             items: ({
                 size: {
@@ -353,7 +328,6 @@ export declare class OrderController {
             userId: number;
             paymentMethod: string;
             shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
             note: string | null;
             couponId: number | null;
@@ -363,6 +337,7 @@ export declare class OrderController {
             ghtkLabel: string | null;
             ghtkStatus: string | null;
             ghtkTrackingUrl: string | null;
+            ghtkCodAmount: import("@prisma/client/runtime/library").Decimal | null;
         };
     }>;
     update(id: string, dto: UpdateOrderDto): Promise<{
@@ -374,13 +349,16 @@ export declare class OrderController {
                 createdAt: Date;
                 updatedAt: Date;
                 address: string;
+                userId: number;
                 fullName: string;
                 phone: string;
                 ward: string | null;
                 district: string | null;
                 province: string | null;
+                wardId: number | null;
+                districtId: number | null;
+                provinceId: number | null;
                 isDefault: boolean;
-                userId: number;
             };
             items: ({
                 size: {
@@ -446,7 +424,6 @@ export declare class OrderController {
             userId: number;
             paymentMethod: string;
             shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
             note: string | null;
             couponId: number | null;
@@ -456,6 +433,7 @@ export declare class OrderController {
             ghtkLabel: string | null;
             ghtkStatus: string | null;
             ghtkTrackingUrl: string | null;
+            ghtkCodAmount: import("@prisma/client/runtime/library").Decimal | null;
         };
     }>;
     remove(id: string): Promise<{
@@ -474,7 +452,6 @@ export declare class OrderController {
             userId: number;
             paymentMethod: string;
             shippingAddressId: number;
-            shippingId: number | null;
             shippingFee: number | null;
             note: string | null;
             couponId: number | null;
@@ -484,6 +461,7 @@ export declare class OrderController {
             ghtkLabel: string | null;
             ghtkStatus: string | null;
             ghtkTrackingUrl: string | null;
+            ghtkCodAmount: import("@prisma/client/runtime/library").Decimal | null;
         };
     }>;
 }

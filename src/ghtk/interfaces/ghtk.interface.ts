@@ -22,12 +22,15 @@ export interface GHTKCreateOrderResponse {
     fee: number; // Phí vận chuyển đã tính cho đơn hàng cụ thể này.
     insurance_fee: number; // Phí bảo hiểm áp dụng cho đơn hàng này.
     created: string; // Thời gian (timestamp) cho biết khi nào đơn hàng được tạo.
+    status?: string;        // The status of the order from GHTK (e.g., 'picking', 'accepted')
+    tracking_link?: string; // The URL to track the order on GHTK's website
   };
   reason?: string; // Tin nhắn tùy chọn cung cấp lý do thất bại, nếu 'success' là false.
 }
 
 export interface GHTKProvinceResponse {
   success: boolean; // Cho biết yêu cầu lấy danh sách tỉnh/thành phố có thành công hay không.
+  message?: string;
   data: { // Một mảng các đối tượng, mỗi đối tượng đại diện cho một tỉnh/thành phố.
     ProvinceID: number; // ID số duy nhất của tỉnh/thành phố.
     ProvinceName: string; // Tên của tỉnh/thành phố.
@@ -35,6 +38,7 @@ export interface GHTKProvinceResponse {
 }
 export interface GHTKDistrictResponse {
   success: boolean; // Cho biết yêu cầu lấy danh sách quận/huyện có thành công hay không.
+  message?: string;
   data: { // Một mảng các đối tượng, mỗi đối tượng đại diện cho một quận/huyện.
     DistrictID: number; // ID số duy nhất của quận/huyện.
     DistrictName: string; // Tên của quận/huyện.
@@ -44,9 +48,36 @@ export interface GHTKDistrictResponse {
 
 export interface GHTKWardResponse {
   success: boolean; // Cho biết yêu cầu lấy danh sách phường/xã có thành công hay không.
+  message?: string;
   data: { // Một mảng các đối tượng, mỗi đối tượng đại diện cho một phường/xã.
     WardID: number; // ID số duy nhất của phường/xã.
     WardName: string; // Tên của phường/xã.
     DistrictID: number; // ID của quận/huyện mà phường/xã này thuộc về.
   }[];
+}
+
+
+export interface GHTKTrackingResponse {
+  success: boolean; // Cho biết yêu cầu có thành công hay không.
+  message?: string; // Tin nhắn tùy chọn.
+  order?: { // Đối tượng chứa thông tin chi tiết về trạng thái đơn hàng.
+    label: string; // Mã vận đơn của GHTK.
+    partner_id: string; // Mã ID đơn hàng từ hệ thống của bạn.
+    status: number; // Mã trạng thái của đơn hàng (ví dụ: 1: Đang lấy hàng, 2: Đang giao hàng, -1: Đã hủy).
+    status_text: string; // Mô tả trạng thái bằng văn bản.
+    // Các trường khác có thể có tùy thuộc vào GHTK, ví dụ:
+    // tracking_id: string;
+    // created_at: string;
+    // deliver_date: string;
+    // receiver_name: string;
+    // receiver_address: string;
+    // events: { event_time: string; status: string; address: string; }[]; // Lịch sử các sự kiện
+  };
+  reason?: string; // Lý do thất bại nếu success là false.
+}
+
+export interface GHTKCancelOrderResponse {
+  success: boolean; // Cho biết yêu cầu hủy đơn hàng có thành công hay không.
+  message?: string; // Tin nhắn phản hồi (ví dụ: "Hủy đơn hàng thành công").
+  reason?: string; // Lý do thất bại nếu success là false.
 }

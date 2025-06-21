@@ -26,21 +26,57 @@ let GhtkController = class GhtkController {
         const fee = await this.ghtkService.calculateShippingFee(calculateFeeDto);
         return { success: true, fee };
     }
-    async createOrder(orderId, pickUpAddressId) {
-        const ghtkOrderDetails = await this.ghtkService.createGHTKOrder(orderId, pickUpAddressId);
+    async createOrder(orderId) {
+        const ghtkOrderDetails = await this.ghtkService.createGHTKOrder(orderId);
         return { success: true, message: 'Đơn hàng đã được tạo trên GHTK.', ghtkOrderDetails };
     }
     async getProvinces() {
         const provinces = await this.ghtkService.getProvinces();
-        return { success: true, data: provinces };
+        return {
+            success: true,
+            message: 'Lấy danh sách tỉnh/thành công.',
+            data: provinces
+        };
     }
     async getDistricts(provinceId) {
-        const districts = await this.ghtkService.getDistricts(+provinceId);
-        return { success: true, data: districts };
+        const districts = await this.ghtkService.getDistricts(provinceId);
+        return {
+            success: true,
+            message: `Lấy danh sách quận/huyện cho tỉnh/thành ID ${provinceId} thành công.`,
+            data: districts
+        };
     }
     async getWards(districtId) {
-        const wards = await this.ghtkService.getWards(+districtId);
-        return { success: true, data: wards };
+        const wards = await this.ghtkService.getWards(districtId);
+        return {
+            success: true,
+            message: `Lấy danh sách phường/xã cho quận/huyện ID ${districtId} thành công.`,
+            data: wards
+        };
+    }
+    async cancelOrder(ghtkLabel) {
+        const result = await this.ghtkService.cancelGHTKOrder(ghtkLabel);
+        return {
+            success: true,
+            message: result.message || `Đơn hàng GHTK với mã ${ghtkLabel} đã được hủy thành công.`,
+            data: result
+        };
+    }
+    async trackOrder(ghtkLabel) {
+        const trackingInfo = await this.ghtkService.trackGHTKOrder(ghtkLabel);
+        return {
+            success: true,
+            message: `Thông tin theo dõi cho đơn hàng GHTK ${ghtkLabel} đã được lấy thành công.`,
+            data: trackingInfo
+        };
+    }
+    async getPrintLabelUrl(ghtkLabel) {
+        const printUrl = await this.ghtkService.getPrintLabelUrl(ghtkLabel);
+        return {
+            success: true,
+            message: `URL in nhãn cho đơn hàng GHTK ${ghtkLabel} đã được tạo thành công.`,
+            data: { url: printUrl }
+        };
     }
 };
 exports.GhtkController = GhtkController;
@@ -55,9 +91,8 @@ __decorate([
     (0, common_1.Post)('create-order'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     __param(0, (0, common_1.Body)('orderId')),
-    __param(1, (0, common_1.Body)('pickUpAddressId')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number]),
+    __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], GhtkController.prototype, "createOrder", null);
 __decorate([
@@ -68,18 +103,40 @@ __decorate([
 ], GhtkController.prototype, "getProvinces", null);
 __decorate([
     (0, common_1.Get)('districts'),
-    __param(0, (0, common_1.Query)('provinceId')),
+    __param(0, (0, common_1.Query)('provinceId', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], GhtkController.prototype, "getDistricts", null);
 __decorate([
     (0, common_1.Get)('wards'),
-    __param(0, (0, common_1.Query)('districtId')),
+    __param(0, (0, common_1.Query)('districtId', common_1.ParseIntPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], GhtkController.prototype, "getWards", null);
+__decorate([
+    (0, common_1.Put)('cancel-order/:ghtkLabel'),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    __param(0, (0, common_1.Param)('ghtkLabel')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], GhtkController.prototype, "cancelOrder", null);
+__decorate([
+    (0, common_1.Get)('track-order/:ghtkLabel'),
+    __param(0, (0, common_1.Param)('ghtkLabel')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], GhtkController.prototype, "trackOrder", null);
+__decorate([
+    (0, common_1.Get)('print-label/:ghtkLabel'),
+    __param(0, (0, common_1.Param)('ghtkLabel')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], GhtkController.prototype, "getPrintLabelUrl", null);
 exports.GhtkController = GhtkController = __decorate([
     (0, common_1.Controller)('ghtk'),
     __metadata("design:paramtypes", [ghtk_service_1.GhtkService])

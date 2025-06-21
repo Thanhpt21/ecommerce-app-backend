@@ -1,4 +1,5 @@
 import { IsOptional, IsString, IsBoolean, IsPhoneNumber } from 'class-validator';
+import { Type } from 'class-transformer'; // Import Type from class-transformer
 
 export class UpdateShippingAddressDto {
   @IsOptional()
@@ -6,7 +7,7 @@ export class UpdateShippingAddressDto {
   fullName?: string;
 
   @IsOptional()
-  @IsPhoneNumber('VN') // hoặc 'ZZ' nếu bạn muốn kiểm tra nhẹ
+  @IsPhoneNumber('VN')
   phone?: string;
 
   @IsOptional()
@@ -27,5 +28,6 @@ export class UpdateShippingAddressDto {
 
   @IsOptional()
   @IsBoolean()
+  @Type(() => Boolean) 
   isDefault?: boolean;
 }

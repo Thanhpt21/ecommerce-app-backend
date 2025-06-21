@@ -1,249 +1,382 @@
 import { Injectable, InternalServerErrorException, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
-import { CalculateFeeDto, CreateOrderGHTKDto } from './dto/calculate-fee.dto';
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { CalculateFeeDto, CreateOrderGHTKDto } from './dto/calculate-fee.dto'; // Đảm bảo đúng DTO cho CreateOrderGHTKDto
 import {
   GHTKShipFeeResponse,
   GHTKCreateOrderResponse,
   GHTKProvinceResponse,
   GHTKDistrictResponse,
-  GHTKWardResponse
+  GHTKWardResponse,
+  GHTKTrackingResponse,
+  GHTKCancelOrderResponse
 } from './interfaces/ghtk.interface';
-import { PrismaService } from 'prisma/prisma.service';
+import { PrismaService } from 'prisma/prisma.service'; // Adjust path if needed
 
 @Injectable()
 export class GhtkService {
   private readonly logger = new Logger(GhtkService.name);
   private ghtkApi: AxiosInstance;
-  private ghtkToken: string | undefined;
-  private ghtkShipFeeUrl: string | undefined;
-  private ghtkCreateOrderUrl: string | undefined;
-  private ghtkPartnerCode: string | undefined; // KHAI BÁO BIẾN MỚI CHO PARTNER CODE
+  private readonly GHTK_BASE_API_URL: string;
+  private readonly GHTK_API_TOKEN: string;
+  private readonly GHTK_PARTNER_CODE: string;
+
+  private readonly GHTK_FEE_PATH = '/services/shipment/fee';
+  private readonly GHTK_ORDER_PATH = '/services/shipment/order';
+  private readonly GHTK_CANCEL_ORDER_PATH = '/services/shipment/cancel';
+  private readonly GHTK_TRACKING_PATH = '/services/shipment/detail';
+  private readonly GHTK_PRINT_LABEL_PATH = '/services/label';
+  private readonly GHTK_PUBLIC_PROVINCE_PATH = '/public/province';
+  private readonly GHTK_PUBLIC_DISTRICT_PATH = '/public/district';
+  private readonly GHTK_PUBLIC_WARD_PATH = '/public/ward';
+
+  private defaultPickupConfig: {
+    pick_province: string | null;
+    pick_district: string | null;
+    pick_ward: string | null;
+    pick_address: string | null;
+    pick_tel: string | null;
+    pick_name: string | null;
+  } | undefined = undefined; // Initialize as undefined
 
   constructor(
     private configService: ConfigService,
     private prisma: PrismaService,
   ) {
-    this.ghtkToken = this.configService.get<string>('GHTK_API_TOKEN');
-    this.ghtkShipFeeUrl = this.configService.get<string>('GHTK_API_URL');
-    this.ghtkCreateOrderUrl = this.configService.get<string>('GHTK_REGISTER_SHIPMENT_URL');
-    this.ghtkPartnerCode = this.configService.get<string>('GHTK_PARTNER_CODE'); // LẤY GIÁ TRỊ TỪ .ENV
+    this.GHTK_BASE_API_URL = this.configService.get<string>('GHTK_BASE_API_URL') || 'https://services.giaohangtietkiem.vn';
+    this.GHTK_API_TOKEN = this.configService.get<string>('GHTK_API_TOKEN')!;
+    this.GHTK_PARTNER_CODE = this.configService.get<string>('GHTK_PARTNER_CODE')!;
 
-    // CẬP NHẬT ĐIỀU KIỆN KIỂM TRA ĐỂ BAO GỒM ghtkPartnerCode
-    if (!this.ghtkToken || !this.ghtkShipFeeUrl || !this.ghtkCreateOrderUrl || !this.ghtkPartnerCode) {
-      this.logger.error('GHTK API credentials (token, URLs, partner code) are not fully set in environment variables.');
+    if (!this.GHTK_API_TOKEN || !this.GHTK_PARTNER_CODE || !this.GHTK_BASE_API_URL) {
+      this.logger.error('GHTK API credentials (token, base URL, partner code) are not fully set in environment variables.');
       throw new InternalServerErrorException('GHTK API is not configured. Please check your .env file.');
     }
 
     this.ghtkApi = axios.create({
-      baseURL: 'https://services.giaohangtietkiem.vn', // baseURL này vẫn đúng theo tài liệu GHTK mới
+      baseURL: this.GHTK_BASE_API_URL,
       headers: {
-        Token: this.ghtkToken!, // SỬ DỤNG NON-NULL ASSERTION ĐỂ TRÁNH LỖI TYPESCRIPT
+        Token: this.GHTK_API_TOKEN,
         'Content-Type': 'application/json',
-        'X-Client-Source': this.ghtkPartnerCode!, // THÊM HEADER X-Client-Source
+        'X-Client-Source': this.GHTK_PARTNER_CODE,
       },
-      timeout: 30000, // Tăng timeout lên 30 giây để tránh lỗi "No Response" do mạng chậm
+      timeout: 30000,
     });
 
     this.ghtkApi.interceptors.response.use(
-      response => response,
-      error => {
-        if (error.response) {
-          this.logger.error(`GHTK API Error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
-          throw new InternalServerErrorException(
-            error.response.data.message || 'Lỗi từ GHTK API'
-          );
-        } else if (error.request) {
+      (response) => response,
+      (error) => {
+        if (axios.isAxiosError(error) && error.response) {
+          const errorMessage = error.response.data?.message || `GHTK API returned status ${error.response.status}`;
+          this.logger.error(`GHTK API Error [${error.response.status}]: ${JSON.stringify(error.response.data)}`);
+          throw new BadRequestException(errorMessage);
+        } else if (axios.isAxiosError(error) && error.request) {
           this.logger.error(`GHTK API No Response: ${error.message}`);
-          throw new InternalServerErrorException('Không nhận được phản hồi từ GHTK API.');
+          throw new InternalServerErrorException('Không nhận được phản hồi từ GHTK API. Vui lòng thử lại sau.');
         } else {
           this.logger.error(`GHTK API Request Error: ${error.message}`);
-          throw new InternalServerErrorException('Lỗi khi gửi yêu cầu đến GHTK API.');
+          throw new InternalServerErrorException('Lỗi không xác định khi gửi yêu cầu đến GHTK API.');
         }
       }
     );
+
+    // ⭐ Load default pickup config on service initialization ⭐
+    this.loadDefaultPickupConfig();
   }
 
-  async calculateShippingFee(data: CalculateFeeDto): Promise<number> {
+  // ⭐ New method to load default pickup configuration from database ⭐
+  private async loadDefaultPickupConfig() {
     try {
-      this.logger.log(`Calculating shipping fee for: ${JSON.stringify(data)}`);
-      const response = await this.ghtkApi.get<GHTKShipFeeResponse>(this.ghtkShipFeeUrl!, {
-       params: {
-          pick_province: data.pick_province,
-          pick_district: data.pick_district,
-           pick_ward: data.pick_ward ?? '',   // ENSURE THIS LINE IS PRESENT
-          pick_address: data.pick_address ?? '', // ENSURE THIS LINE IS PRESENT
-          province: data.province,
-          district: data.district,
-          ward: data.ward ?? '',
-          address: data.address ?? '',
-          weight: data.weight,
-          value: data.value ?? 0,
-          deliver_option: data.deliver_option === 'xteam' ? 'xteam' : 'none',
-          // THÊM DÒNG NÀY ĐỂ TRUYỀN GIÁ TRỊ TRANSPORT
-          ...(data.transport && { transport: data.transport }), // Chỉ thêm transport nếu nó tồn tại
-          // Cách khác: transport: data.transport ?? GHTKTransportOption.ROAD, // Nếu bạn muốn luôn có giá trị mặc định là 'road'
+      const config = await this.prisma.config.findFirst({
+        select: {
+          pick_province: true,
+          pick_district: true,
+          pick_ward: true,
+          pick_address: true,
+          pick_tel: true, // New field
+          pick_name: true, // New field
         },
       });
 
-      if (response.data.success && response.data.fee) {
-        this.logger.log(`GHTK Fee Calculated: ${response.data.fee.fee}`);
-        return response.data.fee.fee;
+      if (config) {
+        this.defaultPickupConfig = config;
+        this.logger.log('Default pickup configuration loaded successfully from Config model.');
       } else {
-        this.logger.warn(`GHTK API returned failure for fee calculation: ${response.data.message || 'Unknown reason'}`);
-        throw new BadRequestException(response.data.message || 'Không thể tính phí vận chuyển. Vui lòng kiểm tra lại thông tin địa chỉ.');
+        this.logger.warn('No default pickup configuration found in Config model. GHTK orders may fail without it.');
+        // Optionally, throw an error or set defaults if config is absolutely required.
+        // For now, we'll let it be handled when createGHTKOrder is called.
+      }
+    } catch (error) {
+      this.logger.error(`Failed to load default pickup configuration: ${error.message}`, error.stack);
+      // It's critical if this fails, consider throwing a more severe error
+      throw new InternalServerErrorException('Failed to load GHTK default pickup configuration.');
+    }
+  }
+
+  // --- Các phương thức chung để gửi Request ---
+  private async sendGetRequest<T>(path: string, params?: Record<string, any>): Promise<T> {
+    try {
+      this.logger.debug(`Sending GET request to GHTK: ${path} with params: ${JSON.stringify(params)}`);
+      const response: AxiosResponse<T> = await this.ghtkApi.get<T>(path, { params });
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async sendPostRequest<T>(path: string, data: any): Promise<T> {
+    try {
+      this.logger.debug(`Sending POST request to GHTK: ${path} with data: ${JSON.stringify(data)}`);
+      const response: AxiosResponse<T> = await this.ghtkApi.post<T>(path, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // --- 1. Tính phí vận chuyển ---
+  async calculateShippingFee(data: CalculateFeeDto): Promise<GHTKShipFeeResponse> { // Change return type to GHTKShipFeeResponse
+    if (!this.defaultPickupConfig) {
+      // Attempt to load if not already loaded (e.g., if service was initialized before DB was ready)
+      await this.loadDefaultPickupConfig();
+      if (!this.defaultPickupConfig) {
+        throw new InternalServerErrorException('GHTK default pickup configuration is not available.');
+      }
+    }
+
+    const params = {
+      pick_province: this.defaultPickupConfig.pick_province || '',
+      pick_district: this.defaultPickupConfig.pick_district || '',
+      pick_ward: this.defaultPickupConfig.pick_ward || '',
+      pick_address: this.defaultPickupConfig.pick_address || '',
+      province: data.province,
+      district: data.district,
+      ward: data.ward || '',
+      address: data.address || '',
+      weight: data.weight,
+      value: data.value || 0,
+      deliver_option: data.deliver_option === 'xteam' ? 'xteam' : 'none',
+      ...(data.transport && { transport: data.transport }),
+    };
+
+    try {
+      this.logger.log(`Calculating shipping fee for: ${JSON.stringify(params)}`);
+      const response = await this.sendGetRequest<GHTKShipFeeResponse>(this.GHTK_FEE_PATH, params);
+
+      if (response.success && response.fee) {
+        this.logger.log(`GHTK Fee Calculated: ${response.fee.fee}`);
+        return response; // Return the full response as per your OrderService expects GHTKShipFeeResponse
+      } else {
+        this.logger.warn(`GHTK API returned failure for fee calculation: ${response.message || 'Unknown reason'}`);
+        throw new BadRequestException(response.message || 'Không thể tính phí vận chuyển. Vui lòng kiểm tra lại thông tin địa chỉ.');
       }
     } catch (error) {
       throw error;
     }
   }
 
-  async createGHTKOrder(orderId: number, pickUpAddressId: number): Promise<GHTKCreateOrderResponse['order']> {
+  // --- 2. Tạo đơn hàng trên GHTK ---
+  async createGHTKOrder(orderId: number): Promise<GHTKCreateOrderResponse['order']> { // Removed pickUpAddressId parameter
     const order = await this.prisma.order.findUnique({
-        where: { id: orderId },
-        include: {
+      where: { id: orderId },
+      include: {
         user: true,
         shippingAddress: true,
         items: {
-            include: {
+          include: {
             product: true,
             variant: {
-                include: {
-                product: true, // Đảm bảo include product của variant
-                },
+              include: {
+                product: true, // Ensure include product of variant
+              },
             },
-            },
+          },
         },
-        },
+      },
     });
 
     if (!order) {
       throw new NotFoundException('Order not found.');
     }
 
-    const pickUpAddress = await this.prisma.shippingAddress.findUnique({
-        where: { id: pickUpAddressId },
-    });
-
-    if (!pickUpAddress) {
-        throw new NotFoundException('Pickup address not found. Please configure your store/warehouse address.');
+    if (!this.defaultPickupConfig) {
+      await this.loadDefaultPickupConfig(); // Attempt to load if not already loaded
+      if (!this.defaultPickupConfig) { // Check for essential fields
+        throw new InternalServerErrorException('GHTK default pickup configuration is not available or incomplete.');
+      }
     }
 
-    let totalWeightGram = 0;
+    // Tính tổng trọng lượng và chuẩn bị sản phẩm
     const productsForGHTK = order.items.map(item => {
-        let itemWeightGram: number;
-        let itemName: string;
-        let itemPrice: number;
+      let itemWeightGram: number = 0;
+      let itemName: string = 'Unknown Item';
+      let itemPrice: number = 0;
 
-        if (item.variant) {
-        itemWeightGram = item.variant.product.weight; // Lấy weight từ product của variant
-        itemName = item.variant.title;
+      if (item.variant && item.variant.product) {
+        itemWeightGram = item.variant.product.weight ?? 0; // Use nullish coalescing
+        itemName = item.variant.title || item.variant.product.title; // Use variant name if available, else product title
         itemPrice = item.variant.price;
-        } else if (item.product) {
-        itemWeightGram = item.product.weight;
+      } else if (item.product) {
+        itemWeightGram = item.product.weight ?? 0;
         itemName = item.product.title;
         itemPrice = item.product.price;
-        } else {
-        itemWeightGram = 0;
-        itemName = 'Unknown Item';
-        itemPrice = 0;
-        }
+      }
 
-        totalWeightGram += itemWeightGram * item.quantity;
+      // GHTK yêu cầu trọng lượng là kg, và không thể là 0
+      const weightInKg = itemWeightGram / 1000;
+      const finalWeight = weightInKg > 0 ? weightInKg : 0.1; // GHTK might require min weight, e.g., 0.1kg
 
-        return {
+      return {
         name: itemName,
-        weight: itemWeightGram / 1000, // GHTK yêu cầu trọng lượng là kg
+        weight: finalWeight,
         quantity: item.quantity,
         price: itemPrice,
-        };
+      };
     });
 
+    const ghtkPayload: { order: CreateOrderGHTKDto } = {
+      order: {
+        // id: order.id.toString(), // GHTK sẽ tự tạo ID nếu không cung cấp. Nếu bạn muốn GHTK lưu ID nội bộ của mình, uncomment này.
+        // Thông tin lấy hàng từ defaultPickupConfig
+        pick_province: this.defaultPickupConfig.pick_province || '',
+        pick_district: this.defaultPickupConfig.pick_district || '',
+        pick_ward: this.defaultPickupConfig.pick_ward || '',
+        pick_address: this.defaultPickupConfig.pick_address || '',
+        pick_tel: this.defaultPickupConfig.pick_tel || '', // Use from config
+        pick_name: this.defaultPickupConfig.pick_name || '', // Use from config
 
-    const ghtkPayload: CreateOrderGHTKDto = {
-        // Đảm bảo các trường này không null, sử dụng ?? '' hoặc ! tùy thuộc vào validation của bạn
-        pick_province: pickUpAddress.province!,
-        pick_district: pickUpAddress.district!,
-        pick_ward: pickUpAddress.ward ?? '',
-        pick_address: pickUpAddress.address ?? '',
-        pick_tel: pickUpAddress.phone ?? '',
-        pick_name: pickUpAddress.fullName ?? '',
-
-        province: order.shippingAddress.province!,
-        district: order.shippingAddress.district!,
-        ward: order.shippingAddress.ward ?? '',
-        address: order.shippingAddress.address ?? '',
-        tel: order.shippingAddress.phone ?? '',
-        name: order.shippingAddress.fullName ?? '',
+        // Thông tin người nhận từ Order's shippingAddress
+        province: order.shippingAddress.province || '', // ⭐ Updated to provinceName
+        district: order.shippingAddress.district || '', // ⭐ Updated to districtName
+        ward: order.shippingAddress.ward || '',     // ⭐ Updated to wardName
+        address: order.shippingAddress.address || '',
+        tel: order.shippingAddress.phone || '',
+        name: order.shippingAddress.fullName || '',
 
         note: order.note || `Đơn hàng ${order.id} từ ${order.user.name}`,
-        value: order.totalAmount,
-        pick_money: order.paymentMethod === 'COD' ? order.finalAmount : 0,
-        is_freeship: order.shippingFee === 0 ? 1 : 0,
+        value: order.totalAmount, // Giá trị đơn hàng để GHTK tính bảo hiểm/COD nếu có
+        pick_money: order.paymentMethod === 'COD' ? order.finalAmount : 0, // Số tiền thu hộ (COD)
+        is_freeship: order.shippingFee === 0 ? 1 : 0, // 1 nếu freeship, 0 nếu không
         products: productsForGHTK,
-        // Có thể cần thêm các trường khác như transport, pick_street, street theo tài liệu GHTK
+        // Các trường khác có thể cần thêm tùy thuộc vào yêu cầu của GHTK API
+        // ví dụ: email, use_return_address, transport, street, pick_street, etc.
+      },
     };
 
     try {
-      this.logger.log(`Creating GHTK order for orderId: ${orderId} with payload: ${JSON.stringify(ghtkPayload)}`);
-      const response = await this.ghtkApi.post<GHTKCreateOrderResponse>(this.ghtkCreateOrderUrl!, {
-        order: {
-          id: order.id.toString(),
-          ...ghtkPayload,
-        },
-      });
+      this.logger.log(`Creating GHTK order for orderId: ${orderId} with payload (partial): ${JSON.stringify(ghtkPayload.order)}`); // Log partial payload for brevity
+      const response = await this.sendPostRequest<GHTKCreateOrderResponse>(this.GHTK_ORDER_PATH, ghtkPayload);
 
-      if (response.data.success && response.data.order) {
-        this.logger.log(`GHTK Order Created: ${response.data.order.label}`);
-        return response.data.order;
+      if (response.success && response.order) {
+        this.logger.log(`GHTK Order Created with label: ${response.order.label}`);
+        // Cập nhật lại order trong DB với GHTK label và các thông tin khác
+        await this.prisma.order.update({
+          where: { id: orderId },
+          data: {
+            ghtkLabel: response.order.label,
+            ghtkStatus: response.order.status, // Lưu trạng thái ban đầu từ GHTK
+            ghtkTrackingUrl: response.order.tracking_link, // Lưu URL theo dõi
+            // ghtkCodAmount: response.order.cod_amount, // Nếu GHTK trả về COD amount đã xác nhận
+          },
+        });
+        return response.order;
       } else {
-        this.logger.warn(`GHTK API returned failure for order creation: ${response.data.message || 'Unknown reason'}`);
-        throw new BadRequestException(response.data.message || 'Không thể tạo đơn hàng trên Giao Hàng Tiết Kiệm.');
+        throw new BadRequestException(response.message || 'Không thể tạo đơn hàng trên Giao Hàng Tiết Kiệm.');
       }
     } catch (error) {
       throw error;
     }
   }
 
-async getProvinces() {
+  // --- 3. Lấy danh sách Tỉnh/Thành ---
+  async getProvinces(): Promise<GHTKProvinceResponse['data']> { // Removed | null
     try {
-      // Thay từ '/services/address/provinces' thành '/public/province'
-      const response = await this.ghtkApi.get<GHTKProvinceResponse>('/public/province');
-      if (response.data.success) {
-        return response.data.data;
+      const response = await this.sendGetRequest<GHTKProvinceResponse>(this.GHTK_PUBLIC_PROVINCE_PATH);
+      if (response.success) {
+        return response.data;
       }
-      throw new InternalServerErrorException('Failed to fetch provinces from GHTK.');
+      // If success is false but no HTTP error, still throw BadRequest
+      throw new BadRequestException(response.message || 'Failed to fetch provinces from GHTK.');
     } catch (error) {
-      this.logger.error(`Error fetching provinces: ${error.response?.data?.message || error.message}`);
-      throw new InternalServerErrorException('Failed to fetch provinces from GHTK.');
+      throw error;
     }
   }
 
-  async getDistricts(provinceId: number) {
+  // --- 4. Lấy danh sách Quận/Huyện theo Tỉnh/Thành ---
+  async getDistricts(provinceId: number): Promise<GHTKDistrictResponse['data']> { // Removed | null
     try {
-      // Thay từ `/services/address/districts?province=${provinceId}` thành `/public/district?province=${provinceId}`
-      const response = await this.ghtkApi.get<GHTKDistrictResponse>(`/public/district?province=${provinceId}`);
-      if (response.data.success) {
-        return response.data.data;
+      const response = await this.sendGetRequest<GHTKDistrictResponse>(
+        this.GHTK_PUBLIC_DISTRICT_PATH,
+        { province: provinceId }
+      );
+      if (response.success) {
+        return response.data;
       }
-      throw new InternalServerErrorException('Failed to fetch districts from GHTK.');
+      throw new BadRequestException(response.message || 'Failed to fetch districts from GHTK.');
     } catch (error) {
-      this.logger.error(`Error fetching districts: ${error.response?.data?.message || error.message}`);
-      throw new InternalServerErrorException('Failed to fetch districts from GHTK.');
+      throw error;
     }
   }
 
-  async getWards(districtId: number) {
+  // --- 5. Lấy danh sách Phường/Xã theo Quận/Huyện ---
+  async getWards(districtId: number): Promise<GHTKWardResponse['data']> { // Removed | null
     try {
-      // Thay từ `/services/address/wards?district=${districtId}` thành `/public/ward?district=${districtId}`
-      const response = await this.ghtkApi.get<GHTKWardResponse>(`/public/ward?district=${districtId}`);
-      if (response.data.success) {
-        return response.data.data;
+      const response = await this.sendGetRequest<GHTKWardResponse>(
+        this.GHTK_PUBLIC_WARD_PATH,
+        { district: districtId }
+      );
+      if (response.success) {
+        return response.data;
       }
-      throw new InternalServerErrorException('Failed to fetch wards from GHTK.');
+      throw new BadRequestException(response.message || 'Failed to fetch wards from GHTK.');
     } catch (error) {
-      this.logger.error(`Error fetching wards: ${error.response?.data?.message || error.message}`);
-      throw new InternalServerErrorException('Failed to fetch wards from GHTK.');
+      throw error;
     }
+  }
+
+  // --- 6. Hủy đơn hàng GHTK ---
+  async cancelGHTKOrder(ghtkLabel: string): Promise<GHTKCancelOrderResponse> {
+    try {
+      this.logger.log(`Cancelling GHTK order with label: ${ghtkLabel}`);
+      // GHTK yêu cầu body rỗng cho cancel, không phải null
+      const response = await this.sendPostRequest<GHTKCancelOrderResponse>(
+        `${this.GHTK_CANCEL_ORDER_PATH}/${ghtkLabel}`,
+        {} // Ensure it's an empty object, not null/undefined
+      );
+
+      if (response.success) {
+        this.logger.log(`GHTK Order ${ghtkLabel} cancelled successfully.`);
+        return response;
+      } else {
+        throw new BadRequestException(response.message || 'Không thể hủy đơn hàng trên Giao Hàng Tiết Kiệm.');
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // --- 7. Theo dõi đơn hàng GHTK ---
+  async trackGHTKOrder(ghtkLabel: string): Promise<GHTKTrackingResponse> {
+    try {
+      this.logger.log(`Tracking GHTK order with label: ${ghtkLabel}`);
+      const response = await this.sendGetRequest<GHTKTrackingResponse>(
+        `${this.GHTK_TRACKING_PATH}/${ghtkLabel}`
+      );
+
+      if (response.success) {
+        this.logger.log(`GHTK Order ${ghtkLabel} tracking fetched.`);
+        return response;
+      } else {
+        throw new NotFoundException(response.message || 'Không tìm thấy thông tin theo dõi đơn hàng GHTK.');
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // --- 8. Lấy URL in nhãn đơn hàng GHTK ---
+  async getPrintLabelUrl(ghtkLabel: string): Promise<string> {
+    const url = `${this.GHTK_BASE_API_URL}${this.GHTK_PRINT_LABEL_PATH}/${ghtkLabel}`;
+    this.logger.log(`Generated GHTK print label URL: ${url}`);
+    return url;
   }
 }

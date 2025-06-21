@@ -22,11 +22,14 @@ export interface GHTKCreateOrderResponse {
         fee: number;
         insurance_fee: number;
         created: string;
+        status?: string;
+        tracking_link?: string;
     };
     reason?: string;
 }
 export interface GHTKProvinceResponse {
     success: boolean;
+    message?: string;
     data: {
         ProvinceID: number;
         ProvinceName: string;
@@ -34,6 +37,7 @@ export interface GHTKProvinceResponse {
 }
 export interface GHTKDistrictResponse {
     success: boolean;
+    message?: string;
     data: {
         DistrictID: number;
         DistrictName: string;
@@ -42,9 +46,26 @@ export interface GHTKDistrictResponse {
 }
 export interface GHTKWardResponse {
     success: boolean;
+    message?: string;
     data: {
         WardID: number;
         WardName: string;
         DistrictID: number;
     }[];
+}
+export interface GHTKTrackingResponse {
+    success: boolean;
+    message?: string;
+    order?: {
+        label: string;
+        partner_id: string;
+        status: number;
+        status_text: string;
+    };
+    reason?: string;
+}
+export interface GHTKCancelOrderResponse {
+    success: boolean;
+    message?: string;
+    reason?: string;
 }

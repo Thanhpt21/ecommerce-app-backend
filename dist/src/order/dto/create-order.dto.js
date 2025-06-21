@@ -49,7 +49,6 @@ class CreateOrderDto {
     status;
     paymentMethod;
     shippingAddressId;
-    shippingId;
     shippingFee;
     note;
     couponId;
@@ -68,10 +67,6 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateOrderDto.prototype, "shippingAddressId", void 0);
-__decorate([
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], CreateOrderDto.prototype, "shippingId", void 0);
 __decorate([
     (0, class_validator_1.ValidateIf)((o) => o.shippingId === undefined || o.shippingId === null),
     (0, class_validator_1.IsNumber)(),

@@ -1,31 +1,34 @@
 import { ConfigService } from '@nestjs/config';
 import { CalculateFeeDto } from './dto/calculate-fee.dto';
-import { GHTKCreateOrderResponse } from './interfaces/ghtk.interface';
+import { GHTKShipFeeResponse, GHTKCreateOrderResponse, GHTKProvinceResponse, GHTKDistrictResponse, GHTKWardResponse, GHTKTrackingResponse, GHTKCancelOrderResponse } from './interfaces/ghtk.interface';
 import { PrismaService } from 'prisma/prisma.service';
 export declare class GhtkService {
     private configService;
     private prisma;
     private readonly logger;
     private ghtkApi;
-    private ghtkToken;
-    private ghtkShipFeeUrl;
-    private ghtkCreateOrderUrl;
-    private ghtkPartnerCode;
+    private readonly GHTK_BASE_API_URL;
+    private readonly GHTK_API_TOKEN;
+    private readonly GHTK_PARTNER_CODE;
+    private readonly GHTK_FEE_PATH;
+    private readonly GHTK_ORDER_PATH;
+    private readonly GHTK_CANCEL_ORDER_PATH;
+    private readonly GHTK_TRACKING_PATH;
+    private readonly GHTK_PRINT_LABEL_PATH;
+    private readonly GHTK_PUBLIC_PROVINCE_PATH;
+    private readonly GHTK_PUBLIC_DISTRICT_PATH;
+    private readonly GHTK_PUBLIC_WARD_PATH;
+    private defaultPickupConfig;
     constructor(configService: ConfigService, prisma: PrismaService);
-    calculateShippingFee(data: CalculateFeeDto): Promise<number>;
-    createGHTKOrder(orderId: number, pickUpAddressId: number): Promise<GHTKCreateOrderResponse['order']>;
-    getProvinces(): Promise<{
-        ProvinceID: number;
-        ProvinceName: string;
-    }[]>;
-    getDistricts(provinceId: number): Promise<{
-        DistrictID: number;
-        DistrictName: string;
-        ProvinceID: number;
-    }[]>;
-    getWards(districtId: number): Promise<{
-        WardID: number;
-        WardName: string;
-        DistrictID: number;
-    }[]>;
+    private loadDefaultPickupConfig;
+    private sendGetRequest;
+    private sendPostRequest;
+    calculateShippingFee(data: CalculateFeeDto): Promise<GHTKShipFeeResponse>;
+    createGHTKOrder(orderId: number): Promise<GHTKCreateOrderResponse['order']>;
+    getProvinces(): Promise<GHTKProvinceResponse['data']>;
+    getDistricts(provinceId: number): Promise<GHTKDistrictResponse['data']>;
+    getWards(districtId: number): Promise<GHTKWardResponse['data']>;
+    cancelGHTKOrder(ghtkLabel: string): Promise<GHTKCancelOrderResponse>;
+    trackGHTKOrder(ghtkLabel: string): Promise<GHTKTrackingResponse>;
+    getPrintLabelUrl(ghtkLabel: string): Promise<string>;
 }

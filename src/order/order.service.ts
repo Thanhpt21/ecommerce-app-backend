@@ -3,63 +3,71 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
+  InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { CreateOrderDto, OrderItemDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from 'prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { CancelOrderDto } from './dto/cancel-order.dto';
+import { GhtkService } from 'src/ghtk/ghtk.service';
+import { OrderStatus, PaymentMethod } from './enums/order.enums';
 
 @Injectable()
 export class OrderService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(OrderService.name)
+  constructor(private readonly prisma: PrismaService,  private ghtkService: GhtkService ) {}
 
-  async create(dto: CreateOrderDto, userId: number) {
-    // Gói toàn bộ logic tạo đơn hàng trong một Prisma Transaction
-    const order = await this.prisma.$transaction(async (tx) => { // Sử dụng 'tx' (transaction client)
+async create(dto: CreateOrderDto, userId: number) {
+    const order = await this.prisma.$transaction(async (tx) => {
       const {
         items,
-        status,
+        status, // Should be 'pending' from frontend or handled as default
         paymentMethod,
         shippingAddressId,
         note,
         couponId,
-        shippingId,
-        shippingFee
+        shippingFee // Now, we only care about shippingFee from DTO
       } = dto;
 
-      // 1. Tính toán từng item: lấy giá & giảm giá hiện tại
+      // Ensure initial status is valid
+      const finalStatus = status || OrderStatus.PENDING;
+      // Ensure paymentMethod is valid
+      const finalPaymentMethod = paymentMethod || PaymentMethod.COD;
+
+      // 1. Calculate each item: get current price & discount
       const enrichedItems = await Promise.all(
         items.map(async (item: OrderItemDto) => {
+          let productData;
           if (item.variantId) {
-            const variant = await tx.variant.findUnique({ // <-- Sử dụng tx
+            const variant = await tx.variant.findUnique({
               where: { id: item.variantId },
-              select: { price: true, discount: true },
+              select: { price: true, discount: true, productId: true },
             });
-            if (!variant) throw new NotFoundException('Variant not found');
-            return {
-              ...item,
-              price: variant.price,
-              discount: variant.discount,
-            };
+            if (!variant) throw new NotFoundException(`Variant with ID ${item.variantId} not found.`);
+            // Optionally, fetch product details if variant doesn't have enough info
+            productData = { price: variant.price, discount: variant.discount };
           } else if (item.productId) {
-            const product = await tx.product.findUnique({ // <-- Sử dụng tx
+            const product = await tx.product.findUnique({
               where: { id: item.productId },
               select: { price: true, discount: true },
             });
-            if (!product) throw new NotFoundException('Product not found');
-            return {
-              ...item,
-              price: product.price,
-              discount: product.discount,
-            };
+            if (!product) throw new NotFoundException(`Product with ID ${item.productId} not found.`);
+            productData = { price: product.price, discount: product.discount };
           } else {
-            throw new NotFoundException('Item must have either productId or variantId');
+            throw new BadRequestException('Order item must have either productId or variantId.');
           }
+
+          return {
+            ...item,
+            price: productData.price,
+            discount: productData.discount,
+          };
         }),
       );
 
-      // 2. Tính toán tổng tiền sản phẩm (trước phí ship và coupon)
+      // 2. Calculate total product amount (before shipping fee and coupon)
       let totalAmount = 0;
       let productDiscountAmount = 0;
       for (const item of enrichedItems) {
@@ -67,90 +75,132 @@ export class OrderService {
         productDiscountAmount += (item.discount ?? 0) * item.quantity;
       }
 
-      // 3. Áp dụng coupon nếu có (Chỉ kiểm tra và tính toán giảm giá, KHÔNG TĂNG usedCount ở đây)
+      // 3. Apply coupon if available (Only validate and calculate discount, DO NOT increment usedCount yet)
       let couponDiscount = 0;
       if (couponId) {
-        const coupon = await tx.coupon.findUnique({ // <-- Sử dụng tx
+        const coupon = await tx.coupon.findUnique({
           where: { id: couponId },
         });
 
-        if (!coupon) throw new NotFoundException('Coupon not found');
+        if (!coupon) throw new NotFoundException('Coupon not found.');
 
         const now = new Date();
 
-        // Kiểm tra hết hạn
         if (coupon.expiresAt && coupon.expiresAt < now) {
-          throw new ForbiddenException('Coupon is expired');
+          throw new ForbiddenException('Coupon is expired.');
         }
 
-        // Kiểm tra số lần sử dụng
         if (coupon.usageLimit !== null && coupon.usedCount >= coupon.usageLimit) {
-          throw new ForbiddenException('Coupon usage limit exceeded');
+          throw new ForbiddenException('Coupon usage limit exceeded.');
         }
 
-        // Kiểm tra giá trị đơn tối thiểu
         if (coupon.minOrderValue && totalAmount < coupon.minOrderValue) {
           throw new ForbiddenException(
-            `Order must be at least ${coupon.minOrderValue.toLocaleString('vi-VN')} to use this coupon`,
+            `Order must be at least ${coupon.minOrderValue.toLocaleString('vi-VN')} to use this coupon.`,
           );
         }
 
-        // Áp dụng giảm giá
         couponDiscount = coupon.discount ?? 0;
-
-        // *** LOẠI BỎ DÒNG CẬP NHẬT COUPON TRỰC TIẾP Ở ĐÂY NỮA ***
-        // await this.prisma.coupon.update({ ... });
+        // No coupon usage increment here. It's done at the end of the transaction.
       }
 
-      // 4. Tính toán phí vận chuyển
-      let calculatedShippingFee = 0;
-      let finalShippingId: number | null = null; // Biến này sẽ lưu ID nếu có, hoặc null
+      // 4. Calculate shipping fee
+      // let calculatedShippingFee = 0;
 
-      // Ưu tiên sử dụng shippingFee nếu nó được cung cấp từ frontend
-      if (shippingFee !== undefined && shippingFee !== null) {
-        calculatedShippingFee = shippingFee;
-        // Ở đây, nếu bạn gửi shippingFee, theo logic mới từ frontend, shippingId sẽ là undefined.
-        // Tuy nhiên, nếu frontend vẫn gửi shippingId (do một lý do nào đó), bạn có thể chọn bỏ qua nó
-        // hoặc vẫn lưu lại nếu muốn cho mục đích ghi nhận.
-        // Để nhất quán với "nếu có phí thì không gửi ID", chúng ta có thể bỏ qua shippingId ở đây
-        finalShippingId = null; // Đảm bảo không lưu shippingId nếu phí được gửi
-        
-      } else if (shippingId !== undefined && shippingId !== null) {
-        // Nếu shippingFee không được cung cấp, tra cứu từ shippingId
-        const shippingInfo = await tx.shipping.findUnique({
-          where: { id: shippingId },
-        });
-        // Xử lý trường hợp ID 0 (Giao hàng tiêu chuẩn) nếu nó không có trong DB
-        // NHƯNG NHẤT QUÁN HƠN LÀ NÊN CÓ RECORD ID 0 TRONG DB
-        if (shippingInfo) {
-          calculatedShippingFee = shippingInfo.fee;
-          finalShippingId = shippingInfo.id;
-        } else {
-          throw new BadRequestException(`Shipping method with ID ${shippingId} not found.`);
-        }
-      } else {
-        // Cả shippingId và shippingFee đều không có (hoặc null)
-        throw new BadRequestException('Shipping fee is required if no shipping method is selected.');
-      }
+      // // Prefer using shippingFee if provided from the frontend
+      // if (shippingFee !== undefined && shippingFee !== null) {
+      //   calculatedShippingFee = shippingFee;
+      // } else {
+      //   // If shippingFee is not provided by the frontend,
+      //   // it MUST be calculated here (e.g., by calling GHTK API).
 
-      // 5. Tính toán tổng số tiền cuối cùng của đơn hàng
-      const finalAmount = totalAmount - productDiscountAmount - couponDiscount + calculatedShippingFee;
+      //   // Get recipient address details for GHTK
+      //   const recipientAddress = await tx.shippingAddress.findUnique({
+      //     where: { id: shippingAddressId },
+      //     select: {
+      //       address: true,
+      //       wardName: true,
+      //       districtName: true,
+      //       provinceName: true,
+      //       phone: true,
+      //       fullName: true,
+      //     },
+      //   });
+
+      //   if (!recipientAddress) {
+      //     throw new NotFoundException('Shipping address for calculation not found.');
+      //   }
+
+      //   // ⭐ Define your store's pickup address here ⭐
+      //   // This should ideally come from configuration (e.g., config service, .env)
+      //   // For demonstration, using hardcoded values.
+      //   const storePickupAddress = {
+      //     pick_province: 'TP Hồ Chí Minh',
+      //     pick_district: 'Quận 1',
+      //     pick_ward: 'Phường Bến Nghé',
+      //     pick_address: '123 Đường ABC, Phường Bến Nghé, Quận 1',
+      //   };
+
+      //   // Calculate total weight and value from enrichedItems for GHTK
+      //   // IMPORTANT: Adjust these calculations based on your product data and GHTK's requirements
+      //   const totalOrderWeight = enrichedItems.reduce((sum, item) => sum + (item.quantity * (/* item.weight from product/variant */ 0.5)), 0); // Example: 0.5kg per item
+      //   // Ensure weight is in grams if GHTK expects grams, or convert. Assuming kg for now.
+      //   const ghtkWeight = totalOrderWeight > 0 ? totalOrderWeight : 0.1; // GHTK might require min weight, e.g., 100g = 0.1kg
+      //   const ghtkValue = totalAmount - productDiscountAmount; // GHTK usually uses the value after product discounts
+
+      //   // Call GHTK to calculate the actual shipping fee
+      //   try {
+      //     const ghtkFeeResponse = await this.ghtkService.calculateShippingFee({
+      //       pick_province: storePickupAddress.pick_province,
+      //       pick_district: storePickupAddress.pick_district,
+      //       pick_ward: storePickupAddress.pick_ward,
+      //       pick_address: storePickupAddress.pick_address,
+      //       province: recipientAddress.provinceName,
+      //       district: recipientAddress.districtName,
+      //       ward: recipientAddress.wardName,
+      //       address: recipientAddress.address,
+      //       weight: ghtkWeight,
+      //       value: ghtkValue,
+      //       transport: 'road', // Or 'fly' based on your preference/GHTK options
+      //     });
+
+      //     if (ghtkFeeResponse.success && ghtkFeeResponse.fee) {
+      //       calculatedShippingFee = ghtkFeeResponse.fee.fee;
+      //       // You can also store ghtkFeeResponse.fee.insurance_fee or extra_fee if needed
+      //     } else {
+      //       // Log the detailed GHTK error message if available
+      //       this.logger.error(`GHTK Fee Calculation Error: ${ghtkFeeResponse.reason || ghtkFeeResponse.message || 'Unknown GHTK error'}`);
+      //       throw new BadRequestException(
+      //         ghtkFeeResponse.message || 'Failed to calculate shipping fee from GHTK. Please try again or contact support.'
+      //       );
+      //     }
+      //   } catch (error) {
+      //     this.logger.error(`Error during GHTK shipping fee calculation: ${error.message}`, error.stack);
+      //     // Re-throw specific errors or a generic InternalServerErrorException
+      //     if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      //       throw error;
+      //     }
+      //     throw new InternalServerErrorException('An error occurred while calculating external shipping fee.');
+      //   }
+      // }
+
+      // 5. Calculate final order amount
+      const finalAmount = totalAmount - productDiscountAmount - couponDiscount + 0;
       if (finalAmount < 0) {
-        throw new BadRequestException('Final amount cannot be negative');
+        throw new BadRequestException('Final order amount cannot be negative.');
       }
 
-
-      // 6. Tạo đơn hàng trong database
-      const createdOrder = await tx.order.create({ // <-- Sử dụng tx
+      // 6. Create the order in the database
+      const createdOrder = await tx.order.create({
         data: {
           userId,
-          status,
-          paymentMethod,
+          status: finalStatus,
+          paymentMethod: finalPaymentMethod,
           note,
           shippingAddressId,
           couponId,
-          shippingId,
-          shippingFee: calculatedShippingFee,
+          // Removed shippingId field as per your request
+          shippingFee: shippingFee, // Save the calculated shipping fee
           totalAmount: totalAmount,
           discountAmount: productDiscountAmount + couponDiscount,
           finalAmount: finalAmount,
@@ -177,22 +227,25 @@ export class OrderService {
           },
           shippingAddress: true,
           coupon: true,
-          shipping: true,
+          // Removed shipping relation include
         },
       } satisfies Prisma.OrderCreateArgs);
 
-      // 7. Tăng lượt sử dụng coupon SAU KHI ĐƠN HÀNG ĐƯỢC TẠO THÀNH CÔNG
-      //    VÀ TRONG CÙNG MỘT TRANSACTION
+      // 7. Increment coupon usage AFTER the order is successfully created
+      //    AND within the same transaction
       if (couponId) {
-        await this.incrementCouponUsage(couponId, tx); // <-- Gọi hàm ở đây, truyền tx vào
+        await tx.coupon.update({
+          where: { id: couponId },
+          data: { usedCount: { increment: 1 } },
+        });
       }
 
-      return createdOrder; // Trả về đơn hàng đã tạo
+      return createdOrder; // Return the created order
     });
 
     return {
       success: true,
-      message: 'Order created successfully',
+      message: 'Order created successfully!',
       data: order,
     };
   }
@@ -285,7 +338,6 @@ async findAll( userId: any, page = 1, limit = 10, search = '',  statusFilter?: s
           },
           
         },
-        shipping: true,
       },
     }),
     this.prisma.order.count({ where }),
@@ -333,7 +385,6 @@ async findAll( userId: any, page = 1, limit = 10, search = '',  statusFilter?: s
     })),
     shippingAddress: order.shippingAddress,
      user: order.user,
-     shipping: order.shipping,
     shippingFee: order.shippingFee,
   }));
 
@@ -420,7 +471,6 @@ async findOrdersByUser(userId: number, page = 1, limit = 10) {
               email: true, // Chọn trường email
             },
           },
-          shipping: true,
         },
       }),
       this.prisma.order.count({ where }),
@@ -468,7 +518,6 @@ async findOrdersByUser(userId: number, page = 1, limit = 10) {
       })),
       shippingAddress: order.shippingAddress,
       user: order.user,
-      shipping: order.shipping,
       coupon: order.coupon,
       shippingFee: order.shippingFee,
     }));
@@ -556,7 +605,6 @@ async findOrdersByUser(userId: number, page = 1, limit = 10) {
             email: true, // Chọn trường email
           },
         },
-        shipping: true,
       },
     });
 

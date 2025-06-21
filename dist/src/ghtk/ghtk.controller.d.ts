@@ -5,9 +5,9 @@ export declare class GhtkController {
     constructor(ghtkService: GhtkService);
     calculateFee(calculateFeeDto: CalculateFeeDto): Promise<{
         success: boolean;
-        fee: number;
+        fee: import("./interfaces/ghtk.interface").GHTKShipFeeResponse;
     }>;
-    createOrder(orderId: number, pickUpAddressId: number): Promise<{
+    createOrder(orderId: number): Promise<{
         success: boolean;
         message: string;
         ghtkOrderDetails: {
@@ -17,10 +17,13 @@ export declare class GhtkController {
             fee: number;
             insurance_fee: number;
             created: string;
+            status?: string;
+            tracking_link?: string;
         } | undefined;
     }>;
     getProvinces(): Promise<{
         success: boolean;
+        message: string;
         data: {
             ProvinceID: number;
             ProvinceName: string;
@@ -28,6 +31,7 @@ export declare class GhtkController {
     }>;
     getDistricts(provinceId: number): Promise<{
         success: boolean;
+        message: string;
         data: {
             DistrictID: number;
             DistrictName: string;
@@ -36,10 +40,28 @@ export declare class GhtkController {
     }>;
     getWards(districtId: number): Promise<{
         success: boolean;
+        message: string;
         data: {
             WardID: number;
             WardName: string;
             DistrictID: number;
         }[];
+    }>;
+    cancelOrder(ghtkLabel: string): Promise<{
+        success: boolean;
+        message: string;
+        data: import("./interfaces/ghtk.interface").GHTKCancelOrderResponse;
+    }>;
+    trackOrder(ghtkLabel: string): Promise<{
+        success: boolean;
+        message: string;
+        data: import("./interfaces/ghtk.interface").GHTKTrackingResponse;
+    }>;
+    getPrintLabelUrl(ghtkLabel: string): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            url: string;
+        };
     }>;
 }
