@@ -1,13 +1,13 @@
 // enums.ts
 export enum OrderStatus {
-  PENDING = 'pending',
-  CONFIRMED = 'confirmed', // ⭐ THÊM ĐÂY ⭐
-  PAID = 'paid',
-  SHIPPING = 'shipping',
-  DELIVERED = 'delivered', // ⭐ THÊM ĐÂY ⭐
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
-  RETURNED = 'returned', // ⭐ THÊM ĐÂY ⭐
+  Pending = 'pending',
+  Confirmed = 'confirmed',
+  Preparing = 'preparing',
+  Shipped = 'shipped',
+  Delivered = 'delivered',
+  Completed = 'completed',
+  Cancelled = 'cancelled',
+  Returned = 'returned',
 }
 
 export enum PaymentMethod {

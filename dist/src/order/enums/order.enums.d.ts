@@ -1,12 +1,12 @@
 export declare enum OrderStatus {
-    PENDING = "pending",
-    CONFIRMED = "confirmed",
-    PAID = "paid",
-    SHIPPING = "shipping",
-    DELIVERED = "delivered",
-    COMPLETED = "completed",
-    CANCELLED = "cancelled",
-    RETURNED = "returned"
+    Pending = "pending",
+    Confirmed = "confirmed",
+    Preparing = "preparing",
+    Shipped = "shipped",
+    Delivered = "delivered",
+    Completed = "completed",
+    Cancelled = "cancelled",
+    Returned = "returned"
 }
 export declare enum PaymentMethod {
     COD = "COD",

@@ -1,9 +1,20 @@
-import { IsNotEmpty, IsString, IsNumber, IsOptional, Min, IsEnum } from 'class-validator';
+import { IsNotEmpty, IsString, IsNumber, IsOptional, Min, IsEnum, IsArray, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum GHTKTransportOption {
   ROAD = 'road',
   FLY = 'fly',
+}
+
+// Enum cho tùy chọn lấy hàng (pick_option)
+export enum GHTKPickOption {
+  COD = 'cod',
+  POST = 'post', // Shop sẽ gửi tại bưu cục
+}
+
+export enum GHTKDeliverOption {
+  XTEAM = 'xteam', // Giao hàng xfast
+  NONE = 'none',   // Giao hàng tiêu chuẩn
 }
 
 export class CalculateFeeDto {
@@ -65,94 +76,164 @@ export class CalculateFeeDto {
   transport?: GHTKTransportOption; // THÊM TRƯỜNG NÀY
 }
 
+
+
+
+export class GHTKProductItemDto {
+  @IsNotEmpty({ message: 'Tên sản phẩm không được để trống.' })
+  @IsString({ message: 'Tên sản phẩm phải là chuỗi.' })
+  name: string;
+
+  @IsNotEmpty({ message: 'Trọng lượng sản phẩm không được để trống.' })
+  @IsNumber({}, { message: 'Trọng lượng sản phẩm phải là số.' })
+  @Min(0.01, { message: 'Trọng lượng sản phẩm tối thiểu là 0.01 kg.' }) // GHTK thường yêu cầu trọng lượng > 0
+  @Type(() => Number)
+  weight: number; // Đơn vị KG
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Số lượng sản phẩm phải là số.' })
+  @Min(1, { message: 'Số lượng sản phẩm tối thiểu là 1.' })
+  @Type(() => Number)
+  quantity?: number;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Giá sản phẩm phải là số.' })
+  @Min(0, { message: 'Giá sản phẩm không được âm.' })
+  @Type(() => Number)
+  price?: number;
+
+  @IsOptional()
+  @IsString({ message: 'Mã sản phẩm phải là chuỗi.' })
+  product_code?: string;
+}
+
+// --- DTO cho việc tạo đơn hàng GHTK ---
 export class CreateOrderGHTKDto {
-  // Thông tin địa điểm lấy hàng (người gửi)
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  pick_province: string; // Tỉnh/Thành phố của địa điểm lấy hàng
+  // ⭐⭐⭐ Đã thêm trường ID - BẮT BUỘC theo API GHTK ⭐⭐⭐
+  @IsNotEmpty({ message: 'Mã đơn hàng không được để trống.' })
+  @IsString({ message: 'Mã đơn hàng phải là chuỗi.' })
+  id: string; // Mã đơn hàng trong hệ thống của đối tác
 
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  pick_district: string; // Quận/Huyện của địa điểm lấy hàng
+  // Thông tin điểm lấy hàng (người gửi)
+  @IsNotEmpty({ message: 'Tên người gửi không được để trống.' })
+  @IsString({ message: 'Tên người gửi phải là chuỗi.' })
+  pick_name: string;
 
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  pick_ward: string; // Phường/Xã của địa điểm lấy hàng
+  @IsNotEmpty({ message: 'Địa chỉ lấy hàng không được để trống.' })
+  @IsString({ message: 'Địa chỉ lấy hàng phải là chuỗi.' })
+  pick_address: string;
 
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  pick_address: string; // Địa chỉ cụ thể của địa điểm lấy hàng
+  @IsNotEmpty({ message: 'Tỉnh/Thành phố lấy hàng không được để trống.' })
+  @IsString({ message: 'Tỉnh/Thành phố lấy hàng phải là chuỗi.' })
+  pick_province: string;
 
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  pick_tel: string; // Số điện thoại người gửi
+  @IsNotEmpty({ message: 'Quận/Huyện lấy hàng không được để trống.' })
+  @IsString({ message: 'Quận/Huyện lấy hàng phải là chuỗi.' })
+  pick_district: string;
 
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  pick_name: string; // Tên người gửi
+  @IsOptional() // Tài liệu GHTK ghi đây là 'no' (tùy chọn)
+  @IsString()
+  pick_ward?: string;
 
-  // Thông tin địa điểm giao hàng (người nhận)
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  province: string; // Tỉnh/Thành phố của địa điểm nhận hàng
+  @IsOptional() // Thêm nếu bạn có trường này trong config của mình
+  @IsString()
+  pick_street?: string;
 
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  district: string; // Quận/Huyện của địa điểm nhận hàng
+  @IsNotEmpty({ message: 'Số điện thoại người gửi không được để trống.' })
+  @IsString({ message: 'Số điện thoại người gửi phải là chuỗi.' })
+  pick_tel: string;
 
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  ward: string; // Phường/Xã của địa điểm nhận hàng
+  @IsOptional() // Email người lấy hàng là tùy chọn
+  @IsString()
+  pick_email?: string;
 
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  address: string; // Địa chỉ cụ thể của địa điểm nhận hàng
+  // Thông tin điểm giao hàng (người nhận)
+  @IsNotEmpty({ message: 'Tên người nhận không được để trống.' })
+  @IsString({ message: 'Tên người nhận phải là chuỗi.' })
+  name: string;
 
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  tel: string; // Số điện thoại người nhận
+  @IsNotEmpty({ message: 'Địa chỉ chi tiết người nhận không được để trống.' })
+  @IsString({ message: 'Địa chỉ chi tiết người nhận phải là chuỗi.' })
+  address: string;
 
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsString() // Đảm bảo trường này là chuỗi
-  name: string; // Tên người nhận
+  @IsNotEmpty({ message: 'Tỉnh/Thành phố người nhận không được để trống.' })
+  @IsString({ message: 'Tỉnh/Thành phố người nhận phải là chuỗi.' })
+  province: string;
 
-  @IsOptional() // Trường này là tùy chọn
-  @IsString() // Đảm bảo nếu có thì là chuỗi
-  note?: string; // Ghi chú cho đơn hàng
+  @IsNotEmpty({ message: 'Quận/Huyện người nhận không được để trống.' })
+  @IsString({ message: 'Quận/Huyện người nhận phải là chuỗi.' })
+  district: string;
 
-  // Thông tin tài chính và trạng thái đơn hàng
-  @IsNotEmpty() // Đảm bảo trường này không rỗng
-  @IsNumber() // Đảm bảo trường này là số
-  @Min(0) // Giá trị tối thiểu là 0
-  @Type(() => Number) // Chuyển đổi giá trị nhận được sang kiểu Number
-  value: number; // Tổng giá trị của đơn hàng (thường là tổng giá các sản phẩm)
+  // ward hoặc street là bắt buộc (có ít nhất 1)
+  @IsOptional()
+  @IsString({ message: 'Phường/Xã người nhận phải là chuỗi.' })
+  ward?: string;
 
-  @IsOptional() // Trường này là tùy chọn
-  @IsNumber() // Đảm bảo nếu có thì là số
-  @Min(0) // Giá trị tối thiểu là 0
-  @Type(() => Number) // Chuyển đổi giá trị nhận được sang kiểu Number
-  transport_fee?: number; // Phí vận chuyển (nếu có, có thể do người bán tự điền hoặc GHTK tính)
+  @IsOptional()
+  @IsString({ message: 'Tên đường/phố người nhận phải là chuỗi.' })
+  street?: string;
 
-  @IsOptional() // Trường này là tùy chọn
-  @IsNumber() // Đảm bảo nếu có thì là số
-  @Min(0) // Giá trị tối thiểu là 0
-  @Type(() => Number) // Chuyển đổi giá trị nhận được sang kiểu Number
-  is_freeship?: number; // Cờ báo hiệu có miễn phí vận chuyển hay không (thường là 0 hoặc 1)
+  // ⭐⭐⭐ Đã thêm trường HAMLET - BẮT BUỘC theo API GHTK ⭐⭐⭐
+  @IsNotEmpty({ message: 'Thông tin thôn/ấp/xóm không được để trống (điền "Khác" nếu không có).' })
+  @IsString({ message: 'Thông tin thôn/ấp/xóm phải là chuỗi.' })
+  hamlet: string;
 
-  @IsOptional() // Trường này là tùy chọn
-  @IsNumber() // Đảm bảo nếu có thì là số
-  @Min(0) // Giá trị tối thiểu là 0
-  @Type(() => Number) // Chuyển đổi giá trị nhận được sang kiểu Number
-  pick_money?: number; // Số tiền cần thu hộ (COD - Cash On Delivery)
+  @IsNotEmpty({ message: 'Số điện thoại người nhận không được để trống.' })
+  @IsString({ message: 'Số điện thoại người nhận phải là chuỗi.' })
+  tel: string;
+
+  // ⭐⭐⭐ Đã thêm trường EMAIL - BẮT BUỘC theo API GHTK ⭐⭐⭐
+  @IsNotEmpty({ message: 'Email người nhận không được để trống.' })
+  @IsString({ message: 'Email người nhận phải là chuỗi.' })
+  email: string;
+
+  // Thông tin đơn hàng chung
+  @IsOptional()
+  @IsString()
+  note?: string; // Ghi chú đơn hàng
+
+  @IsNotEmpty({ message: 'Giá trị đóng khai giá không được để trống.' })
+  @IsNumber({}, { message: 'Giá trị đóng khai giá phải là số.' })
+  @Min(0, { message: 'Giá trị đóng khai giá không được âm.' })
+  @Type(() => Number)
+  value: number; // Giá trị đóng khai giá (để tính phí khai giá và bồi thường)
+
+  @IsNotEmpty({ message: 'Số tiền thu hộ không được để trống.' })
+  @IsNumber({}, { message: 'Số tiền thu hộ phải là số.' })
+  @Min(0, { message: 'Số tiền thu hộ không được âm.' })
+  @Type(() => Number)
+  pick_money: number; // Số tiền CoD. Nếu bằng 0 thì không thu tiền CoD.
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Trạng thái freeship phải là số (0 hoặc 1).' })
+  @Min(0)
+  @Type(() => Number)
+  is_freeship?: 0 | 1; // 1 nếu freeship, 0 nếu không (mặc định 0)
+
+  // ⭐⭐⭐ Đã thêm trường PICK_OPTION - BẮT BUỘC theo API GHTK ⭐⭐⭐
+  @IsNotEmpty({ message: 'Tùy chọn lấy hàng không được để trống.' })
+  @IsEnum(GHTKPickOption, { message: 'Tùy chọn lấy hàng không hợp lệ (phải là "cod" hoặc "post").' })
+  pick_option: GHTKPickOption; // 'cod' hoặc 'post'
+
+  // ⭐⭐⭐ Đã thêm trường TRANSPORT - TÙY CHỌN theo API GHTK ⭐⭐⭐
+  @IsOptional()
+  @IsEnum(GHTKTransportOption, { message: 'Phương thức vận chuyển không hợp lệ.' })
+  transport?: GHTKTransportOption; // 'road' (bộ) , 'fly' (bay)
+
+  // ⭐⭐⭐ Đã thêm trường DELIVER_OPTION - TÙY CHỌN theo API GHTK ⭐⭐⭐
+  @IsOptional()
+  @IsEnum(GHTKDeliverOption, { message: 'Tùy chọn giao hàng không hợp lệ.' })
+  deliver_option?: GHTKDeliverOption; // 'xteam' nếu là xfast
 
   // Danh sách sản phẩm trong đơn hàng
-  @IsNotEmpty() // Đảm bảo danh sách này không rỗng
-  @Type(() => Array) // Chuyển đổi giá trị nhận được sang kiểu Array
-  products: { // Một mảng các đối tượng, mỗi đối tượng đại diện cho một sản phẩm
-    name: string; // Tên sản phẩm
-    weight: number; // Trọng lượng của một đơn vị sản phẩm
-    product_code?: string; // Mã sản phẩm (tùy chọn)
-    quantity: number; // Số lượng sản phẩm này
-    price?: number; // Giá của một đơn vị sản phẩm (tùy chọn)
-  }[];
+  @IsNotEmpty({ message: 'Danh sách sản phẩm không được để trống.' })
+  @IsArray({ message: 'Sản phẩm phải là một mảng.' })
+  @ValidateNested({ each: true }) // Validate từng đối tượng trong mảng
+  @Type(() => GHTKProductItemDto) // Chuyển đổi mỗi phần tử sang kiểu GHTKProductItemDto
+  products: GHTKProductItemDto[];
+
+  // Các trường khác như use_return_address, return_name, return_address, etc.
+  // Bạn có thể thêm vào đây nếu cần thiết cho các luồng trả hàng phức tạp
+  // tags?: number[]; // Nhãn đơn hàng
+  // sub_tags?: number[]; // Chi tiết nhãn
 }

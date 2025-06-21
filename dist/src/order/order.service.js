@@ -15,6 +15,7 @@ const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const ghtk_service_1 = require("../ghtk/ghtk.service");
 const order_enums_1 = require("./enums/order.enums");
+const file_util_1 = require("../utils/file.util");
 let OrderService = OrderService_1 = class OrderService {
     prisma;
     ghtkService;
@@ -25,9 +26,22 @@ let OrderService = OrderService_1 = class OrderService {
     }
     async create(dto, userId) {
         const order = await this.prisma.$transaction(async (tx) => {
-            const { items, status, paymentMethod, shippingAddressId, note, couponId, shippingFee } = dto;
-            const finalStatus = status || order_enums_1.OrderStatus.PENDING;
+            const { items, status, paymentMethod, shippingAddressId, note, couponId, shippingFee, } = dto;
+            const finalStatus = status || order_enums_1.OrderStatus.Pending;
             const finalPaymentMethod = paymentMethod || order_enums_1.PaymentMethod.COD;
+            let orderCode = (0, file_util_1.generateSecureRandomCode)(10);
+            let isUnique = false;
+            while (!isUnique) {
+                const existingOrder = await tx.order.findUnique({
+                    where: { orderCode: orderCode },
+                });
+                if (!existingOrder) {
+                    isUnique = true;
+                }
+                else {
+                    orderCode = (0, file_util_1.generateSecureRandomCode)(10);
+                }
+            }
             const enrichedItems = await Promise.all(items.map(async (item) => {
                 let productData;
                 if (item.variantId) {
@@ -82,7 +96,7 @@ let OrderService = OrderService_1 = class OrderService {
                 }
                 couponDiscount = coupon.discount ?? 0;
             }
-            const finalAmount = totalAmount - productDiscountAmount - couponDiscount + 0;
+            const finalAmount = totalAmount - productDiscountAmount - couponDiscount + (shippingFee ?? 0);
             if (finalAmount < 0) {
                 throw new common_1.BadRequestException('Final order amount cannot be negative.');
             }
@@ -98,6 +112,7 @@ let OrderService = OrderService_1 = class OrderService {
                     totalAmount: totalAmount,
                     discountAmount: productDiscountAmount + couponDiscount,
                     finalAmount: finalAmount,
+                    orderCode: orderCode,
                     items: {
                         create: enrichedItems.map((item) => ({
                             productId: item.productId,
@@ -355,6 +370,7 @@ let OrderService = OrderService_1 = class OrderService {
             shippingAddressId: order.shippingAddressId,
             couponId: order.couponId,
             status: order.status,
+            orderCode: order.orderCode,
             paymentMethod: order.paymentMethod,
             note: order.note,
             totalAmount: order.totalAmount,
@@ -555,16 +571,6 @@ let OrderService = OrderService_1 = class OrderService {
             message: 'Hủy đơn hàng thành công',
             data: updatedOrder,
         };
-    }
-    async incrementCouponUsage(couponId, tx) {
-        await tx.coupon.update({
-            where: { id: couponId },
-            data: {
-                usedCount: {
-                    increment: 1,
-                },
-            },
-        });
     }
 };
 exports.OrderService = OrderService;

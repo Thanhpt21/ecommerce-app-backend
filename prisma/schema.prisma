@@ -309,6 +309,7 @@ model Order {
   shippingAddressId Int
   couponId          Int?
   shippingFee       Float?
+  orderCode             String   @unique
 
   user            User            @relation(fields: [userId], references: [id])
   shippingAddress ShippingAddress @relation(fields: [shippingAddressId], references: [id])

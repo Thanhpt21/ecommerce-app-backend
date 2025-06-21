@@ -43,7 +43,6 @@ export class CreateOrderDto {
   shippingAddressId: number;
   
 
-  @ValidateIf((o) => o.shippingId === undefined || o.shippingId === null)
   @IsNumber()
   shippingFee?: number; // Đặt là tùy chọn vì có thể không cần nếu có shippingId
 
@@ -58,4 +57,9 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
+
+  @IsOptional()
+  @IsString()
+  orderCode?: string;
+
 }

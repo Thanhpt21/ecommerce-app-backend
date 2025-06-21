@@ -11,14 +11,15 @@ export declare class GhtkController {
         success: boolean;
         message: string;
         ghtkOrderDetails: {
-            partner_id: string;
             label: string;
+            partner_id: string;
             area: string;
             fee: number;
-            insurance_fee: number;
-            created: string;
-            status?: string;
-            tracking_link?: string;
+            insurance: number;
+            estimated_pick_time: string;
+            estimated_deliver_time: string;
+            status: string;
+            tracking_link: string;
         } | undefined;
     }>;
     getProvinces(): Promise<{

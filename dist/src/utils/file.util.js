@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.extractPublicId = extractPublicId;
+exports.generateSecureRandomCode = generateSecureRandomCode;
+const crypto = require("crypto");
 function extractPublicId(url) {
     if (!url)
         return null;
@@ -13,5 +15,14 @@ function extractPublicId(url) {
     catch (err) {
         return null;
     }
+}
+function generateSecureRandomCode(length = 10) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const bytes = crypto.randomBytes(length);
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(bytes[i] % characters.length);
+    }
+    return result;
 }
 //# sourceMappingURL=file.util.js.map

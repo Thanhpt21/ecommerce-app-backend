@@ -53,6 +53,7 @@ class CreateOrderDto {
     note;
     couponId;
     items;
+    orderCode;
 }
 exports.CreateOrderDto = CreateOrderDto;
 __decorate([
@@ -68,7 +69,6 @@ __decorate([
     __metadata("design:type", Number)
 ], CreateOrderDto.prototype, "shippingAddressId", void 0);
 __decorate([
-    (0, class_validator_1.ValidateIf)((o) => o.shippingId === undefined || o.shippingId === null),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], CreateOrderDto.prototype, "shippingFee", void 0);
@@ -87,4 +87,9 @@ __decorate([
     (0, class_transformer_1.Type)(() => OrderItemDto),
     __metadata("design:type", Array)
 ], CreateOrderDto.prototype, "items", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateOrderDto.prototype, "orderCode", void 0);
 //# sourceMappingURL=create-order.dto.js.map

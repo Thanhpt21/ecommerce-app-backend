@@ -3,14 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentMethod = exports.OrderStatus = void 0;
 var OrderStatus;
 (function (OrderStatus) {
-    OrderStatus["PENDING"] = "pending";
-    OrderStatus["CONFIRMED"] = "confirmed";
-    OrderStatus["PAID"] = "paid";
-    OrderStatus["SHIPPING"] = "shipping";
-    OrderStatus["DELIVERED"] = "delivered";
-    OrderStatus["COMPLETED"] = "completed";
-    OrderStatus["CANCELLED"] = "cancelled";
-    OrderStatus["RETURNED"] = "returned";
+    OrderStatus["Pending"] = "pending";
+    OrderStatus["Confirmed"] = "confirmed";
+    OrderStatus["Preparing"] = "preparing";
+    OrderStatus["Shipped"] = "shipped";
+    OrderStatus["Delivered"] = "delivered";
+    OrderStatus["Completed"] = "completed";
+    OrderStatus["Cancelled"] = "cancelled";
+    OrderStatus["Returned"] = "returned";
 })(OrderStatus || (exports.OrderStatus = OrderStatus = {}));
 var PaymentMethod;
 (function (PaymentMethod) {

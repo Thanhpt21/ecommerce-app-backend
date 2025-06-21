@@ -10,23 +10,11 @@ export declare class OrderController {
         success: boolean;
         message: string;
         data: {
-            coupon: {
-                id: number;
-                createdAt: Date;
-                updatedAt: Date;
-                expiresAt: Date;
-                title: string;
-                code: string;
-                discount: number;
-                usageLimit: number;
-                minOrderValue: number;
-                usedCount: number;
-            } | null;
             shippingAddress: {
                 id: number;
+                address: string;
                 createdAt: Date;
                 updatedAt: Date;
-                address: string;
                 userId: number;
                 fullName: string;
                 phone: string;
@@ -38,7 +26,56 @@ export declare class OrderController {
                 provinceId: number | null;
                 isDefault: boolean;
             };
+            coupon: {
+                id: number;
+                createdAt: Date;
+                updatedAt: Date;
+                discount: number;
+                title: string;
+                code: string;
+                expiresAt: Date;
+                usageLimit: number;
+                usedCount: number;
+                minOrderValue: number;
+            } | null;
             items: ({
+                product: {
+                    id: number;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    status: string;
+                    colorId: number | null;
+                    price: number;
+                    discount: number;
+                    title: string;
+                    thumb: string;
+                    images: string[];
+                    slug: string;
+                    description: string;
+                    code: string;
+                    sold: number;
+                    averageRating: number;
+                    ratingCount: number;
+                    tags: string[];
+                    brandId: number | null;
+                    categoryId: number | null;
+                    weight: number;
+                    weightUnit: string;
+                    unit: string;
+                } | null;
+                variant: {
+                    id: number;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    productId: number;
+                    colorId: number | null;
+                    price: number;
+                    discount: number;
+                    title: string;
+                    thumb: string;
+                    images: string[];
+                    sku: string;
+                } | null;
                 size: {
                     id: number;
                     createdAt: Date;
@@ -52,67 +89,31 @@ export declare class OrderController {
                     title: string;
                     code: string;
                 } | null;
-                product: {
-                    id: number;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    title: string;
-                    slug: string;
-                    code: string;
-                    discount: number;
-                    description: string;
-                    price: number;
-                    status: string;
-                    tags: string[];
-                    brandId: number | null;
-                    categoryId: number | null;
-                    colorId: number | null;
-                    thumb: string;
-                    weight: number;
-                    weightUnit: string;
-                    unit: string;
-                    images: string[];
-                    sold: number;
-                    averageRating: number;
-                    ratingCount: number;
-                } | null;
-                variant: {
-                    id: number;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    title: string;
-                    discount: number;
-                    price: number;
-                    colorId: number | null;
-                    thumb: string;
-                    images: string[];
-                    productId: number;
-                    sku: string;
-                } | null;
             } & {
                 id: number;
-                discount: number;
-                sizeId: number | null;
-                quantity: number;
-                price: number;
-                colorId: number | null;
+                orderId: number;
                 productId: number | null;
                 variantId: number | null;
-                orderId: number;
+                sizeId: number | null;
+                colorId: number | null;
+                quantity: number;
+                price: number;
+                discount: number;
             })[];
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            discountAmount: number;
-            status: string;
             userId: number;
-            paymentMethod: string;
             shippingAddressId: number;
-            shippingFee: number | null;
-            note: string | null;
             couponId: number | null;
+            shippingFee: number | null;
+            orderCode: string;
+            status: string;
+            paymentMethod: string;
+            note: string | null;
             totalAmount: number;
+            discountAmount: number;
             finalAmount: number;
             cancelReason: string | null;
             ghtkLabel: string | null;
@@ -194,6 +195,7 @@ export declare class OrderController {
             shippingAddressId: number;
             couponId: number | null;
             status: string;
+            orderCode: string;
             paymentMethod: string;
             note: string | null;
             totalAmount: number;
@@ -245,9 +247,9 @@ export declare class OrderController {
             };
             coupon: {
                 id: number;
-                expiresAt: Date;
-                code: string;
                 discount: number;
+                code: string;
+                expiresAt: Date;
                 usageLimit: number;
                 usedCount: number;
             } | null;
@@ -264,14 +266,6 @@ export declare class OrderController {
             user: {
                 email: string;
             };
-            coupon: {
-                id: number;
-                expiresAt: Date;
-                code: string;
-                discount: number;
-                usageLimit: number;
-                usedCount: number;
-            } | null;
             shippingAddress: {
                 id: number;
                 address: string;
@@ -282,56 +276,65 @@ export declare class OrderController {
                 district: string | null;
                 province: string | null;
             };
+            coupon: {
+                id: number;
+                discount: number;
+                code: string;
+                expiresAt: Date;
+                usageLimit: number;
+                usedCount: number;
+            } | null;
             items: ({
+                product: {
+                    id: number;
+                    color: {
+                        id: number;
+                        title: string;
+                        code: string;
+                    } | null;
+                    title: string;
+                    thumb: string;
+                    slug: string;
+                } | null;
+                variant: {
+                    id: number;
+                    color: {
+                        id: number;
+                        title: string;
+                        code: string;
+                    } | null;
+                    title: string;
+                    thumb: string;
+                } | null;
                 size: {
                     id: number;
                     title: string;
                 } | null;
-                product: {
-                    color: {
-                        id: number;
-                        title: string;
-                        code: string;
-                    } | null;
-                    id: number;
-                    title: string;
-                    slug: string;
-                    thumb: string;
-                } | null;
-                variant: {
-                    color: {
-                        id: number;
-                        title: string;
-                        code: string;
-                    } | null;
-                    id: number;
-                    title: string;
-                    thumb: string;
-                } | null;
             } & {
                 id: number;
-                discount: number;
-                sizeId: number | null;
-                quantity: number;
-                price: number;
-                colorId: number | null;
+                orderId: number;
                 productId: number | null;
                 variantId: number | null;
-                orderId: number;
+                sizeId: number | null;
+                colorId: number | null;
+                quantity: number;
+                price: number;
+                discount: number;
             })[];
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            discountAmount: number;
-            status: string;
             userId: number;
-            paymentMethod: string;
             shippingAddressId: number;
-            shippingFee: number | null;
-            note: string | null;
             couponId: number | null;
+            shippingFee: number | null;
+            orderCode: string;
+            status: string;
+            paymentMethod: string;
+            note: string | null;
             totalAmount: number;
+            discountAmount: number;
             finalAmount: number;
             cancelReason: string | null;
             ghtkLabel: string | null;
@@ -346,9 +349,9 @@ export declare class OrderController {
         data: {
             shippingAddress: {
                 id: number;
+                address: string;
                 createdAt: Date;
                 updatedAt: Date;
-                address: string;
                 userId: number;
                 fullName: string;
                 phone: string;
@@ -361,73 +364,74 @@ export declare class OrderController {
                 isDefault: boolean;
             };
             items: ({
+                product: {
+                    id: number;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    status: string;
+                    colorId: number | null;
+                    price: number;
+                    discount: number;
+                    title: string;
+                    thumb: string;
+                    images: string[];
+                    slug: string;
+                    description: string;
+                    code: string;
+                    sold: number;
+                    averageRating: number;
+                    ratingCount: number;
+                    tags: string[];
+                    brandId: number | null;
+                    categoryId: number | null;
+                    weight: number;
+                    weightUnit: string;
+                    unit: string;
+                } | null;
+                variant: {
+                    id: number;
+                    createdAt: Date;
+                    updatedAt: Date;
+                    productId: number;
+                    colorId: number | null;
+                    price: number;
+                    discount: number;
+                    title: string;
+                    thumb: string;
+                    images: string[];
+                    sku: string;
+                } | null;
                 size: {
                     id: number;
                     createdAt: Date;
                     updatedAt: Date;
                     title: string;
                 } | null;
-                product: {
-                    id: number;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    title: string;
-                    slug: string;
-                    code: string;
-                    discount: number;
-                    description: string;
-                    price: number;
-                    status: string;
-                    tags: string[];
-                    brandId: number | null;
-                    categoryId: number | null;
-                    colorId: number | null;
-                    thumb: string;
-                    weight: number;
-                    weightUnit: string;
-                    unit: string;
-                    images: string[];
-                    sold: number;
-                    averageRating: number;
-                    ratingCount: number;
-                } | null;
-                variant: {
-                    id: number;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    title: string;
-                    discount: number;
-                    price: number;
-                    colorId: number | null;
-                    thumb: string;
-                    images: string[];
-                    productId: number;
-                    sku: string;
-                } | null;
             } & {
                 id: number;
-                discount: number;
-                sizeId: number | null;
-                quantity: number;
-                price: number;
-                colorId: number | null;
+                orderId: number;
                 productId: number | null;
                 variantId: number | null;
-                orderId: number;
+                sizeId: number | null;
+                colorId: number | null;
+                quantity: number;
+                price: number;
+                discount: number;
             })[];
         } & {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            discountAmount: number;
-            status: string;
             userId: number;
-            paymentMethod: string;
             shippingAddressId: number;
-            shippingFee: number | null;
-            note: string | null;
             couponId: number | null;
+            shippingFee: number | null;
+            orderCode: string;
+            status: string;
+            paymentMethod: string;
+            note: string | null;
             totalAmount: number;
+            discountAmount: number;
             finalAmount: number;
             cancelReason: string | null;
             ghtkLabel: string | null;
@@ -447,15 +451,16 @@ export declare class OrderController {
             id: number;
             createdAt: Date;
             updatedAt: Date;
-            discountAmount: number;
-            status: string;
             userId: number;
-            paymentMethod: string;
             shippingAddressId: number;
-            shippingFee: number | null;
-            note: string | null;
             couponId: number | null;
+            shippingFee: number | null;
+            orderCode: string;
+            status: string;
+            paymentMethod: string;
+            note: string | null;
             totalAmount: number;
+            discountAmount: number;
             finalAmount: number;
             cancelReason: string | null;
             ghtkLabel: string | null;

@@ -14,4 +14,5 @@ export declare class CreateOrderDto {
     note?: string;
     couponId?: number;
     items: OrderItemDto[];
+    orderCode?: string;
 }

@@ -1,3 +1,73 @@
+import { GHTKDeliverOption, GHTKPickOption, GHTKTransportOption } from "../dto/calculate-fee.dto";
+
+export interface DefaultPickupConfig {
+  pick_name: string;
+  pick_address: string;
+  pick_province: string;
+  pick_district: string;
+  pick_ward?: string;
+  pick_tel: string;
+}
+
+export interface GHTKProduct {
+  name: string;
+  weight: number; // kg
+  quantity: number;
+  price: number;
+  product_code?: string | number; // Updated to accept string or number as per your reference
+}
+
+export interface GHTKOrderRequestData {
+  id: string;
+  pick_name: string;
+  pick_address: string;
+  pick_province: string;
+  pick_district: string;
+  pick_ward?: string;
+  pick_tel: string;
+  pick_money: number; // Tiền thu hộ
+  name: string; // Tên người nhận
+  address: string; // Địa chỉ người nhận
+  province: string;
+  district: string;
+  ward?: string;
+  hamlet: string;
+  tel: string;
+  email?: string; // Email người nhận
+  note?: string;
+  value: number; // Giá trị đóng khai giá
+  is_freeship: '0' | '1'; // ⭐ Changed to string '0' or '1' as per your reference ⭐
+  pick_option: GHTKPickOption;
+  transport: GHTKTransportOption;
+  deliver_option: GHTKDeliverOption;
+  pick_date?: string; // Added this field as it's in your reference
+  // Additional fields from your reference:
+  // "Khối lượng tính cước tối đa: 1.00 kg" is typically a note, not a separate field.
+  // "GHTK - HCM - Noi Thanh" seems to be part of 'name' in your reference, which is fine.
+}
+
+export interface GHTKCreateOrderPayload {
+  order: GHTKOrderRequestData;
+  products: GHTKProduct[];
+}
+
+export interface GHTKCreateOrderResponse {
+  success: boolean;
+  message?: string;
+  order?: {
+    label: string;
+    partner_id: string;
+    area: string;
+    fee: number;
+    insurance: number;
+    estimated_pick_time: string;
+    estimated_deliver_time: string;
+    status: string;
+    tracking_link: string;
+    // ... other fields from GHTK response
+  };
+}
+
 export interface GHTKShipFeeResponse {
   success: boolean; // Cho biết yêu cầu có thành công hay không (true là thành công, false là thất bại).
   message?: string; // Tin nhắn tùy chọn cung cấp thông tin chi tiết hơn, thường dùng cho các thông báo thành công.
@@ -9,21 +79,6 @@ export interface GHTKShipFeeResponse {
       pickup_fee: number; // Phí lấy hàng (pickup).
       return_fee: number; // Phí hoàn hàng (return), nếu việc giao hàng không thành công.
     };
-  };
-  reason?: string; // Tin nhắn tùy chọn cung cấp lý do thất bại, nếu 'success' là false.
-}
-export interface GHTKCreateOrderResponse {
-  success: boolean; // Cho biết việc tạo đơn hàng có thành công hay không.
-  message?: string; // Tin nhắn tùy chọn, thường dùng cho phản hồi thành công.
-  order?: { // Đối tượng tùy chọn chứa thông tin chi tiết của đơn hàng đã tạo.
-    partner_id: string; // Mã ID duy nhất của đơn hàng từ hệ thống của bạn.
-    label: string; // Mã vận đơn hoặc mã theo dõi của GHTK cho đơn hàng.
-    area: string; // Khu vực địa lý hoặc vùng dịch vụ của đơn hàng.
-    fee: number; // Phí vận chuyển đã tính cho đơn hàng cụ thể này.
-    insurance_fee: number; // Phí bảo hiểm áp dụng cho đơn hàng này.
-    created: string; // Thời gian (timestamp) cho biết khi nào đơn hàng được tạo.
-    status?: string;        // The status of the order from GHTK (e.g., 'picking', 'accepted')
-    tracking_link?: string; // The URL to track the order on GHTK's website
   };
   reason?: string; // Tin nhắn tùy chọn cung cấp lý do thất bại, nếu 'success' là false.
 }

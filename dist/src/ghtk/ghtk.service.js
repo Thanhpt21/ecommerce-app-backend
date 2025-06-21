@@ -14,6 +14,7 @@ exports.GhtkService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const axios_1 = require("axios");
+const calculate_fee_dto_1 = require("./dto/calculate-fee.dto");
 const prisma_service_1 = require("../../prisma/prisma.service");
 let GhtkService = GhtkService_1 = class GhtkService {
     configService;
@@ -82,7 +83,6 @@ let GhtkService = GhtkService_1 = class GhtkService {
             });
             if (config) {
                 this.defaultPickupConfig = config;
-                this.logger.log('Default pickup configuration loaded successfully from Config model.');
             }
             else {
                 this.logger.warn('No default pickup configuration found in Config model. GHTK orders may fail without it.');
@@ -95,7 +95,6 @@ let GhtkService = GhtkService_1 = class GhtkService {
     }
     async sendGetRequest(path, params) {
         try {
-            this.logger.debug(`Sending GET request to GHTK: ${path} with params: ${JSON.stringify(params)}`);
             const response = await this.ghtkApi.get(path, { params });
             return response.data;
         }
@@ -105,7 +104,6 @@ let GhtkService = GhtkService_1 = class GhtkService {
     }
     async sendPostRequest(path, data) {
         try {
-            this.logger.debug(`Sending POST request to GHTK: ${path} with data: ${JSON.stringify(data)}`);
             const response = await this.ghtkApi.post(path, data);
             return response.data;
         }
@@ -135,10 +133,8 @@ let GhtkService = GhtkService_1 = class GhtkService {
             ...(data.transport && { transport: data.transport }),
         };
         try {
-            this.logger.log(`Calculating shipping fee for: ${JSON.stringify(params)}`);
             const response = await this.sendGetRequest(this.GHTK_FEE_PATH, params);
             if (response.success && response.fee) {
-                this.logger.log(`GHTK Fee Calculated: ${response.fee.fee}`);
                 return response;
             }
             else {
@@ -181,49 +177,80 @@ let GhtkService = GhtkService_1 = class GhtkService {
             let itemWeightGram = 0;
             let itemName = 'Unknown Item';
             let itemPrice = 0;
+            let productCode = null;
             if (item.variant && item.variant.product) {
                 itemWeightGram = item.variant.product.weight ?? 0;
-                itemName = item.variant.title || item.variant.product.title;
+                itemName = item.variant.title;
                 itemPrice = item.variant.price;
+                productCode = item.variant.product.code;
             }
             else if (item.product) {
                 itemWeightGram = item.product.weight ?? 0;
                 itemName = item.product.title;
                 itemPrice = item.product.price;
+                productCode = item.product.code;
             }
             const weightInKg = itemWeightGram / 1000;
             const finalWeight = weightInKg > 0 ? weightInKg : 0.1;
+            let finalProductCode;
+            if (productCode !== null) {
+                const numCode = Number(productCode);
+                finalProductCode = !isNaN(numCode) ? numCode : productCode;
+            }
             return {
                 name: itemName,
                 weight: finalWeight,
                 quantity: item.quantity,
                 price: itemPrice,
+                ...(productCode && { product_code: productCode }),
             };
         });
+        const totalOrderWeight = order.items.reduce((sum, item) => {
+            let itemWeightGram = 0;
+            if (item.variant && item.variant.product) {
+                itemWeightGram = item.variant.product.weight ?? 0;
+            }
+            else if (item.product) {
+                itemWeightGram = item.product.weight ?? 0;
+            }
+            const itemTotalWeight = (itemWeightGram / 1000) * item.quantity;
+            return sum + (itemTotalWeight > 0 ? itemTotalWeight : (0.1 * item.quantity));
+        }, 0);
+        const finalTotalOrderWeight = totalOrderWeight > 0 ? totalOrderWeight : 0.1;
+        const receiverEmail = order.user?.email || '';
+        const orderValueForGHTK = order.totalAmount || order.finalAmount || 0;
+        const receiverWard = order.shippingAddress.ward || '';
+        const orderData = {
+            id: order.id.toString(),
+            pick_name: this.defaultPickupConfig.pick_name || '',
+            pick_address: this.defaultPickupConfig.pick_address || '',
+            pick_province: this.defaultPickupConfig.pick_province || '',
+            pick_district: this.defaultPickupConfig.pick_district || '',
+            pick_ward: this.defaultPickupConfig.pick_ward || '',
+            pick_tel: this.defaultPickupConfig.pick_tel || '',
+            pick_money: order.paymentMethod === 'COD' ? (Number(order.finalAmount) || 0) : 0,
+            name: order.shippingAddress.fullName || '',
+            address: order.shippingAddress.address || '',
+            province: order.shippingAddress.province || '',
+            district: order.shippingAddress.district || '',
+            ward: receiverWard,
+            hamlet: 'Khác',
+            tel: order.shippingAddress.phone || '',
+            email: receiverEmail,
+            note: order.note || `Đơn hàng ${order.id} từ ${order.user?.name || 'khách hàng'}`,
+            value: orderValueForGHTK,
+            is_freeship: order.shippingFee === 0 ? '1' : '0',
+            pick_option: calculate_fee_dto_1.GHTKPickOption.COD,
+            transport: calculate_fee_dto_1.GHTKTransportOption.ROAD,
+            deliver_option: calculate_fee_dto_1.GHTKDeliverOption.NONE,
+        };
         const ghtkPayload = {
-            order: {
-                pick_province: this.defaultPickupConfig.pick_province || '',
-                pick_district: this.defaultPickupConfig.pick_district || '',
-                pick_ward: this.defaultPickupConfig.pick_ward || '',
-                pick_address: this.defaultPickupConfig.pick_address || '',
-                pick_tel: this.defaultPickupConfig.pick_tel || '',
-                pick_name: this.defaultPickupConfig.pick_name || '',
-                province: order.shippingAddress.province || '',
-                district: order.shippingAddress.district || '',
-                ward: order.shippingAddress.ward || '',
-                address: order.shippingAddress.address || '',
-                tel: order.shippingAddress.phone || '',
-                name: order.shippingAddress.fullName || '',
-                note: order.note || `Đơn hàng ${order.id} từ ${order.user.name}`,
-                value: order.totalAmount,
-                pick_money: order.paymentMethod === 'COD' ? order.finalAmount : 0,
-                is_freeship: order.shippingFee === 0 ? 1 : 0,
-                products: productsForGHTK,
-            },
+            order: orderData,
+            products: productsForGHTK,
         };
         try {
-            this.logger.log(`Creating GHTK order for orderId: ${orderId} with payload (partial): ${JSON.stringify(ghtkPayload.order)}`);
-            const response = await this.sendPostRequest(this.GHTK_ORDER_PATH, ghtkPayload);
+            this.logger.log(`Creating GHTK order for orderId: ${orderId} with payload: ${JSON.stringify(ghtkPayload)}`);
+            const response = await this.sendPostRequest(`${this.GHTK_ORDER_PATH}/?ver=1.5`, ghtkPayload);
             if (response.success && response.order) {
                 this.logger.log(`GHTK Order Created with label: ${response.order.label}`);
                 await this.prisma.order.update({
@@ -237,6 +264,7 @@ let GhtkService = GhtkService_1 = class GhtkService {
                 return response.order;
             }
             else {
+                this.logger.error(`GHTK API Error Response: ${JSON.stringify(response)}`);
                 throw new common_1.BadRequestException(response.message || 'Không thể tạo đơn hàng trên Giao Hàng Tiết Kiệm.');
             }
         }

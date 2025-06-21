@@ -13,11 +13,14 @@ import { Prisma } from '@prisma/client';
 import { CancelOrderDto } from './dto/cancel-order.dto';
 import { GhtkService } from 'src/ghtk/ghtk.service';
 import { OrderStatus, PaymentMethod } from './enums/order.enums';
+import * as crypto from 'crypto';
+import { generateSecureRandomCode } from 'src/utils/file.util';
 
 @Injectable()
 export class OrderService {
   private readonly logger = new Logger(OrderService.name)
   constructor(private readonly prisma: PrismaService,  private ghtkService: GhtkService ) {}
+
 
 async create(dto: CreateOrderDto, userId: number) {
     const order = await this.prisma.$transaction(async (tx) => {
@@ -28,13 +31,27 @@ async create(dto: CreateOrderDto, userId: number) {
         shippingAddressId,
         note,
         couponId,
-        shippingFee // Now, we only care about shippingFee from DTO
+        shippingFee,
       } = dto;
 
       // Ensure initial status is valid
-      const finalStatus = status || OrderStatus.PENDING;
+      const finalStatus = status || OrderStatus.Pending;
       // Ensure paymentMethod is valid
       const finalPaymentMethod = paymentMethod || PaymentMethod.COD;
+
+      let orderCode: string = generateSecureRandomCode(10);
+      let isUnique = false;
+      while (!isUnique) {
+          const existingOrder = await tx.order.findUnique({
+              where: { orderCode: orderCode },
+          });
+
+          if (!existingOrder) {
+              isUnique = true; 
+          } else {
+              orderCode = generateSecureRandomCode(10);
+          }
+      }
 
       // 1. Calculate each item: get current price & discount
       const enrichedItems = await Promise.all(
@@ -104,88 +121,8 @@ async create(dto: CreateOrderDto, userId: number) {
         // No coupon usage increment here. It's done at the end of the transaction.
       }
 
-      // 4. Calculate shipping fee
-      // let calculatedShippingFee = 0;
-
-      // // Prefer using shippingFee if provided from the frontend
-      // if (shippingFee !== undefined && shippingFee !== null) {
-      //   calculatedShippingFee = shippingFee;
-      // } else {
-      //   // If shippingFee is not provided by the frontend,
-      //   // it MUST be calculated here (e.g., by calling GHTK API).
-
-      //   // Get recipient address details for GHTK
-      //   const recipientAddress = await tx.shippingAddress.findUnique({
-      //     where: { id: shippingAddressId },
-      //     select: {
-      //       address: true,
-      //       wardName: true,
-      //       districtName: true,
-      //       provinceName: true,
-      //       phone: true,
-      //       fullName: true,
-      //     },
-      //   });
-
-      //   if (!recipientAddress) {
-      //     throw new NotFoundException('Shipping address for calculation not found.');
-      //   }
-
-      //   // ⭐ Define your store's pickup address here ⭐
-      //   // This should ideally come from configuration (e.g., config service, .env)
-      //   // For demonstration, using hardcoded values.
-      //   const storePickupAddress = {
-      //     pick_province: 'TP Hồ Chí Minh',
-      //     pick_district: 'Quận 1',
-      //     pick_ward: 'Phường Bến Nghé',
-      //     pick_address: '123 Đường ABC, Phường Bến Nghé, Quận 1',
-      //   };
-
-      //   // Calculate total weight and value from enrichedItems for GHTK
-      //   // IMPORTANT: Adjust these calculations based on your product data and GHTK's requirements
-      //   const totalOrderWeight = enrichedItems.reduce((sum, item) => sum + (item.quantity * (/* item.weight from product/variant */ 0.5)), 0); // Example: 0.5kg per item
-      //   // Ensure weight is in grams if GHTK expects grams, or convert. Assuming kg for now.
-      //   const ghtkWeight = totalOrderWeight > 0 ? totalOrderWeight : 0.1; // GHTK might require min weight, e.g., 100g = 0.1kg
-      //   const ghtkValue = totalAmount - productDiscountAmount; // GHTK usually uses the value after product discounts
-
-      //   // Call GHTK to calculate the actual shipping fee
-      //   try {
-      //     const ghtkFeeResponse = await this.ghtkService.calculateShippingFee({
-      //       pick_province: storePickupAddress.pick_province,
-      //       pick_district: storePickupAddress.pick_district,
-      //       pick_ward: storePickupAddress.pick_ward,
-      //       pick_address: storePickupAddress.pick_address,
-      //       province: recipientAddress.provinceName,
-      //       district: recipientAddress.districtName,
-      //       ward: recipientAddress.wardName,
-      //       address: recipientAddress.address,
-      //       weight: ghtkWeight,
-      //       value: ghtkValue,
-      //       transport: 'road', // Or 'fly' based on your preference/GHTK options
-      //     });
-
-      //     if (ghtkFeeResponse.success && ghtkFeeResponse.fee) {
-      //       calculatedShippingFee = ghtkFeeResponse.fee.fee;
-      //       // You can also store ghtkFeeResponse.fee.insurance_fee or extra_fee if needed
-      //     } else {
-      //       // Log the detailed GHTK error message if available
-      //       this.logger.error(`GHTK Fee Calculation Error: ${ghtkFeeResponse.reason || ghtkFeeResponse.message || 'Unknown GHTK error'}`);
-      //       throw new BadRequestException(
-      //         ghtkFeeResponse.message || 'Failed to calculate shipping fee from GHTK. Please try again or contact support.'
-      //       );
-      //     }
-      //   } catch (error) {
-      //     this.logger.error(`Error during GHTK shipping fee calculation: ${error.message}`, error.stack);
-      //     // Re-throw specific errors or a generic InternalServerErrorException
-      //     if (error instanceof NotFoundException || error instanceof BadRequestException) {
-      //       throw error;
-      //     }
-      //     throw new InternalServerErrorException('An error occurred while calculating external shipping fee.');
-      //   }
-      // }
-
       // 5. Calculate final order amount
-      const finalAmount = totalAmount - productDiscountAmount - couponDiscount + 0;
+      const finalAmount = totalAmount - productDiscountAmount - couponDiscount + (shippingFee ?? 0);
       if (finalAmount < 0) {
         throw new BadRequestException('Final order amount cannot be negative.');
       }
@@ -204,6 +141,7 @@ async create(dto: CreateOrderDto, userId: number) {
           totalAmount: totalAmount,
           discountAmount: productDiscountAmount + couponDiscount,
           finalAmount: finalAmount,
+          orderCode: orderCode,
           items: {
             create: enrichedItems.map((item) => ({
               productId: item.productId,
@@ -482,6 +420,7 @@ async findOrdersByUser(userId: number, page = 1, limit = 10) {
       shippingAddressId: order.shippingAddressId,
       couponId: order.couponId,
       status: order.status,
+      orderCode: order.orderCode,
       paymentMethod: order.paymentMethod,
       note: order.note,
       totalAmount: order.totalAmount,
@@ -708,18 +647,4 @@ async findOrdersByUser(userId: number, page = 1, limit = 10) {
     };
   }
 
-  // Helper method to increment coupon usage count within a transaction
-  private async incrementCouponUsage(
-    couponId: number,
-    tx: Prisma.TransactionClient,
-  ): Promise<void> {
-    await tx.coupon.update({
-      where: { id: couponId },
-      data: {
-        usedCount: {
-          increment: 1,
-        },
-      },
-    });
-  }
 }

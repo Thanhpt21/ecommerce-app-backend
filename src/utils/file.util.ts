@@ -1,4 +1,5 @@
 // src/utils/file.util.ts
+import * as crypto from 'crypto';
 
 export function extractPublicId(url: string | null): string | null {
   if (!url) return null;
@@ -10,6 +11,18 @@ export function extractPublicId(url: string | null): string | null {
   } catch (err) {
     return null;
   }
+}
+
+
+export  function generateSecureRandomCode(length: number = 10): string {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const bytes = crypto.randomBytes(length); // Lấy các byte ngẫu nhiên
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    // Dùng modulo để ánh xạ byte về chỉ mục của 'characters'
+    result += characters.charAt(bytes[i] % characters.length);
+  }
+  return result;
 }
 
 
