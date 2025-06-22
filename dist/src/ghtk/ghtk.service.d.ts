@@ -23,12 +23,13 @@ export declare class GhtkService {
     private loadDefaultPickupConfig;
     private sendGetRequest;
     private sendPostRequest;
+    private sendDeleteRequest;
     calculateShippingFee(data: CalculateFeeDto): Promise<GHTKShipFeeResponse>;
     createGHTKOrder(orderId: number): Promise<GHTKCreateOrderResponse['order']>;
     getProvinces(): Promise<GHTKProvinceResponse['data']>;
     getDistricts(provinceId: number): Promise<GHTKDistrictResponse['data']>;
     getWards(districtId: number): Promise<GHTKWardResponse['data']>;
-    cancelGHTKOrder(ghtkLabel: string): Promise<GHTKCancelOrderResponse>;
     trackGHTKOrder(ghtkLabel: string): Promise<GHTKTrackingResponse>;
     getPrintLabelUrl(ghtkLabel: string): Promise<string>;
+    cancelGHTKOrder(ghtkLabel: string): Promise<GHTKCancelOrderResponse>;
 }

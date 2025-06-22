@@ -58,6 +58,11 @@ export interface GHTKCreateOrderResponse {
         tracking_link: string;
     };
 }
+export interface GHTKCancelOrderResponse {
+    success: boolean;
+    message?: string;
+    reason?: string;
+}
 export interface GHTKShipFeeResponse {
     success: boolean;
     message?: string;
@@ -107,10 +112,5 @@ export interface GHTKTrackingResponse {
         status: number;
         status_text: string;
     };
-    reason?: string;
-}
-export interface GHTKCancelOrderResponse {
-    success: boolean;
-    message?: string;
     reason?: string;
 }

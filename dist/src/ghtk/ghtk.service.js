@@ -50,7 +50,7 @@ let GhtkService = GhtkService_1 = class GhtkService {
                 'Content-Type': 'application/json',
                 'X-Client-Source': this.GHTK_PARTNER_CODE,
             },
-            timeout: 30000,
+            timeout: 60000,
         });
         this.ghtkApi.interceptors.response.use((response) => response, (error) => {
             if (axios_1.default.isAxiosError(error) && error.response) {
@@ -109,6 +109,20 @@ let GhtkService = GhtkService_1 = class GhtkService {
         }
         catch (error) {
             throw error;
+        }
+    }
+    async sendDeleteRequest(url) {
+        try {
+            const response = await this.ghtkApi.delete(url);
+            return response.data;
+        }
+        catch (error) {
+            if (axios_1.default.isAxiosError(error) && error.response) {
+                this.logger.error(`GHTK API Error Response (DELETE): ${JSON.stringify(error.response.data)}`);
+                throw new common_1.BadRequestException(error.response.data.message || 'Error from GHTK API (DELETE request)');
+            }
+            this.logger.error(`Error sending DELETE request to GHTK: ${error.message}`);
+            throw new common_1.InternalServerErrorException('Failed to connect to GHTK API.');
         }
     }
     async calculateShippingFee(data) {
@@ -308,22 +322,6 @@ let GhtkService = GhtkService_1 = class GhtkService {
             throw error;
         }
     }
-    async cancelGHTKOrder(ghtkLabel) {
-        try {
-            this.logger.log(`Cancelling GHTK order with label: ${ghtkLabel}`);
-            const response = await this.sendPostRequest(`${this.GHTK_CANCEL_ORDER_PATH}/${ghtkLabel}`, {});
-            if (response.success) {
-                this.logger.log(`GHTK Order ${ghtkLabel} cancelled successfully.`);
-                return response;
-            }
-            else {
-                throw new common_1.BadRequestException(response.message || 'Không thể hủy đơn hàng trên Giao Hàng Tiết Kiệm.');
-            }
-        }
-        catch (error) {
-            throw error;
-        }
-    }
     async trackGHTKOrder(ghtkLabel) {
         try {
             this.logger.log(`Tracking GHTK order with label: ${ghtkLabel}`);
@@ -344,6 +342,28 @@ let GhtkService = GhtkService_1 = class GhtkService {
         const url = `${this.GHTK_BASE_API_URL}${this.GHTK_PRINT_LABEL_PATH}/${ghtkLabel}`;
         this.logger.log(`Generated GHTK print label URL: ${url}`);
         return url;
+    }
+    async cancelGHTKOrder(ghtkLabel) {
+        if (!ghtkLabel) {
+            throw new common_1.BadRequestException('Mã vận đơn GHTK không được để trống.');
+        }
+        try {
+            this.logger.log(`Đang cố gắng hủy đơn hàng GHTK với mã vận đơn: ${ghtkLabel}`);
+            const cancelUrl = `${this.GHTK_ORDER_PATH}/cancel/${ghtkLabel}`;
+            const response = await this.sendDeleteRequest(cancelUrl);
+            if (response.success) {
+                this.logger.log(`Đơn hàng GHTK với mã vận đơn ${ghtkLabel} đã được hủy thành công.`);
+            }
+            else {
+                this.logger.error(`Không thể hủy đơn hàng GHTK ${ghtkLabel}: ${response.message}`);
+                throw new common_1.BadRequestException(response.message || 'Không thể hủy đơn hàng trên Giao Hàng Tiết Kiệm.');
+            }
+            return response;
+        }
+        catch (error) {
+            this.logger.error(`Lỗi khi hủy đơn hàng GHTK ${ghtkLabel}: ${error.message}`, error.stack);
+            throw error;
+        }
     }
 };
 exports.GhtkService = GhtkService;

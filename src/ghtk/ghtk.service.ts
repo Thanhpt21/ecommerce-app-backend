@@ -61,7 +61,7 @@ export class GhtkService {
         'Content-Type': 'application/json',
         'X-Client-Source': this.GHTK_PARTNER_CODE,
       },
-      timeout: 30000,
+      timeout: 60000,
     });
 
     this.ghtkApi.interceptors.response.use(
@@ -132,6 +132,22 @@ export class GhtkService {
       return response.data;
     } catch (error) {
       throw error;
+    }
+  }
+
+   private async sendDeleteRequest<T>(url: string): Promise<T> {
+    try {
+      const response = await this.ghtkApi.delete<T>(url);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        this.logger.error(`GHTK API Error Response (DELETE): ${JSON.stringify(error.response.data)}`);
+        throw new BadRequestException(
+          error.response.data.message || 'Error from GHTK API (DELETE request)',
+        );
+      }
+      this.logger.error(`Error sending DELETE request to GHTK: ${error.message}`);
+      throw new InternalServerErrorException('Failed to connect to GHTK API.');
     }
   }
 
@@ -229,12 +245,6 @@ export class GhtkService {
         // GHTK yêu cầu trọng lượng là kg, và không thể là 0
         const weightInKg = itemWeightGram / 1000;
         const finalWeight = weightInKg > 0 ? weightInKg : 0.1;
-
-        let finalProductCode: string | number | undefined;
-        if (productCode !== null) {
-            const numCode = Number(productCode);
-            finalProductCode = !isNaN(numCode) ? numCode : productCode;
-        }
 
         return {
           name: itemName,
@@ -383,26 +393,6 @@ export class GhtkService {
     }
   }
 
-  // --- 6. Hủy đơn hàng GHTK ---
-  async cancelGHTKOrder(ghtkLabel: string): Promise<GHTKCancelOrderResponse> {
-    try {
-      this.logger.log(`Cancelling GHTK order with label: ${ghtkLabel}`);
-      // GHTK yêu cầu body rỗng cho cancel, không phải null
-      const response = await this.sendPostRequest<GHTKCancelOrderResponse>(
-        `${this.GHTK_CANCEL_ORDER_PATH}/${ghtkLabel}`,
-        {} // Ensure it's an empty object, not null/undefined
-      );
-
-      if (response.success) {
-        this.logger.log(`GHTK Order ${ghtkLabel} cancelled successfully.`);
-        return response;
-      } else {
-        throw new BadRequestException(response.message || 'Không thể hủy đơn hàng trên Giao Hàng Tiết Kiệm.');
-      }
-    } catch (error) {
-      throw error;
-    }
-  }
 
   // --- 7. Theo dõi đơn hàng GHTK ---
   async trackGHTKOrder(ghtkLabel: string): Promise<GHTKTrackingResponse> {
@@ -428,5 +418,38 @@ export class GhtkService {
     const url = `${this.GHTK_BASE_API_URL}${this.GHTK_PRINT_LABEL_PATH}/${ghtkLabel}`;
     this.logger.log(`Generated GHTK print label URL: ${url}`);
     return url;
+  }
+
+  async cancelGHTKOrder(ghtkLabel: string): Promise<GHTKCancelOrderResponse> {
+    if (!ghtkLabel) {
+      throw new BadRequestException('Mã vận đơn GHTK không được để trống.');
+    }
+
+    try {
+      this.logger.log(`Đang cố gắng hủy đơn hàng GHTK với mã vận đơn: ${ghtkLabel}`);
+      // Endpoint để hủy đơn hàng là /services/shipment/cancel/{label}
+      const cancelUrl = `${this.GHTK_ORDER_PATH}/cancel/${ghtkLabel}`; 
+      
+      const response = await this.sendDeleteRequest<GHTKCancelOrderResponse>(
+        cancelUrl
+      );
+
+      if (response.success) {
+        this.logger.log(`Đơn hàng GHTK với mã vận đơn ${ghtkLabel} đã được hủy thành công.`);
+        // ⭐ Tùy chọn: Cập nhật trạng thái đơn hàng trong DB của bạn ⭐
+        // Bạn có thể tìm order trong DB của mình bằng ghtkLabel và cập nhật trạng thái
+        // Ví dụ: await this.prisma.order.updateMany({ 
+        //   where: { ghtkLabel: ghtkLabel }, 
+        //   data: { status: 'CANCELLED_BY_GHTK' } // Đặt trạng thái phù hợp trong enum của bạn
+        // });
+      } else {
+        this.logger.error(`Không thể hủy đơn hàng GHTK ${ghtkLabel}: ${response.message}`);
+        throw new BadRequestException(response.message || 'Không thể hủy đơn hàng trên Giao Hàng Tiết Kiệm.');
+      }
+      return response;
+    } catch (error) {
+      this.logger.error(`Lỗi khi hủy đơn hàng GHTK ${ghtkLabel}: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 }

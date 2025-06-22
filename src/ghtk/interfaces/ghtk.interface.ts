@@ -68,6 +68,13 @@ export interface GHTKCreateOrderResponse {
   };
 }
 
+
+export interface GHTKCancelOrderResponse {
+  success: boolean; // Cho biết yêu cầu hủy đơn hàng có thành công hay không.
+  message?: string; // Tin nhắn phản hồi (ví dụ: "Hủy đơn hàng thành công").
+  reason?: string; // Lý do thất bại nếu success là false.
+}
+
 export interface GHTKShipFeeResponse {
   success: boolean; // Cho biết yêu cầu có thành công hay không (true là thành công, false là thất bại).
   message?: string; // Tin nhắn tùy chọn cung cấp thông tin chi tiết hơn, thường dùng cho các thông báo thành công.
@@ -131,8 +138,3 @@ export interface GHTKTrackingResponse {
   reason?: string; // Lý do thất bại nếu success là false.
 }
 
-export interface GHTKCancelOrderResponse {
-  success: boolean; // Cho biết yêu cầu hủy đơn hàng có thành công hay không.
-  message?: string; // Tin nhắn phản hồi (ví dụ: "Hủy đơn hàng thành công").
-  reason?: string; // Lý do thất bại nếu success là false.
-}
