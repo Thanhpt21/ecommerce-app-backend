@@ -90,33 +90,6 @@ export interface GHTKShipFeeResponse {
   reason?: string; // Tin nhắn tùy chọn cung cấp lý do thất bại, nếu 'success' là false.
 }
 
-export interface GHTKProvinceResponse {
-  success: boolean; // Cho biết yêu cầu lấy danh sách tỉnh/thành phố có thành công hay không.
-  message?: string;
-  data: { // Một mảng các đối tượng, mỗi đối tượng đại diện cho một tỉnh/thành phố.
-    ProvinceID: number; // ID số duy nhất của tỉnh/thành phố.
-    ProvinceName: string; // Tên của tỉnh/thành phố.
-  }[];
-}
-export interface GHTKDistrictResponse {
-  success: boolean; // Cho biết yêu cầu lấy danh sách quận/huyện có thành công hay không.
-  message?: string;
-  data: { // Một mảng các đối tượng, mỗi đối tượng đại diện cho một quận/huyện.
-    DistrictID: number; // ID số duy nhất của quận/huyện.
-    DistrictName: string; // Tên của quận/huyện.
-    ProvinceID: number; // ID của tỉnh/thành phố mà quận/huyện này thuộc về.
-  }[];
-}
-
-export interface GHTKWardResponse {
-  success: boolean; // Cho biết yêu cầu lấy danh sách phường/xã có thành công hay không.
-  message?: string;
-  data: { // Một mảng các đối tượng, mỗi đối tượng đại diện cho một phường/xã.
-    WardID: number; // ID số duy nhất của phường/xã.
-    WardName: string; // Tên của phường/xã.
-    DistrictID: number; // ID của quận/huyện mà phường/xã này thuộc về.
-  }[];
-}
 
 
 export interface GHTKTrackingResponse {
@@ -137,4 +110,33 @@ export interface GHTKTrackingResponse {
   };
   reason?: string; // Lý do thất bại nếu success là false.
 }
+
+
+// Giả định các kiểu dữ liệu phản hồi từ GHTK
+export interface GHTKBaseResponse<T> {
+  success: boolean;
+  message?: string;
+  data: T;
+}
+
+export interface GHTKProvince {
+  ProvinceID: number;
+  ProvinceName: string;
+}
+
+export interface GHTKDistrict {
+  DistrictID: number;
+  ProvinceID: number;
+  DistrictName: string;
+}
+
+export interface GHTKWard {
+  WardCode: string;
+  DistrictID: number;
+  WardName: string;
+}
+
+export interface GHTKProvinceResponse extends GHTKBaseResponse<GHTKProvince[]> {}
+export interface GHTKDistrictResponse extends GHTKBaseResponse<GHTKDistrict[]> {}
+export interface GHTKWardResponse extends GHTKBaseResponse<GHTKWard[]> {}
 

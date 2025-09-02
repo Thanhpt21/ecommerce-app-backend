@@ -17,25 +17,25 @@ export declare class ProductService {
         data: ({
             category: {
                 image: string | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 slug: string;
                 parentId: number | null;
             } | null;
             brand: {
                 image: string | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
             } | null;
             size: ({
                 size: {
-                    id: number;
                     createdAt: Date;
                     updatedAt: Date;
+                    id: number;
                     title: string;
                 };
             } & {
@@ -44,16 +44,16 @@ export declare class ProductService {
                 productId: number;
             })[];
             color: {
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 code: string;
             } | null;
         } & {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             code: string;
@@ -91,25 +91,25 @@ export declare class ProductService {
             }[];
             category: {
                 image: string | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 slug: string;
                 parentId: number | null;
             } | null;
             brand: {
                 image: string | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
             } | null;
             size: ({
                 size: {
-                    id: number;
                     createdAt: Date;
                     updatedAt: Date;
+                    id: number;
                     title: string;
                 };
             } & {
@@ -118,15 +118,15 @@ export declare class ProductService {
                 productId: number;
             })[];
             color: {
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 code: string;
             } | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             code: string;
@@ -168,9 +168,9 @@ export declare class ProductService {
                     title: string;
                     code: string;
                 } | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 discount: number;
                 price: number;
@@ -201,17 +201,17 @@ export declare class ProductService {
                     id: number;
                 };
             } & {
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 productId: number;
                 star: number;
                 comment: string;
                 postedById: number;
             })[];
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             code: string;
@@ -254,9 +254,9 @@ export declare class ProductService {
                     title: string;
                     code: string;
                 } | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 discount: number;
                 price: number;
@@ -287,17 +287,17 @@ export declare class ProductService {
                     id: number;
                 };
             } & {
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 productId: number;
                 star: number;
                 comment: string;
                 postedById: number;
             })[];
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             code: string;
@@ -337,9 +337,9 @@ export declare class ProductService {
                     title: string;
                     code: string;
                 } | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 discount: number;
                 price: number;
@@ -370,17 +370,17 @@ export declare class ProductService {
                     id: number;
                 };
             } & {
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 productId: number;
                 star: number;
                 comment: string;
                 postedById: number;
             })[];
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             code: string;
@@ -419,9 +419,9 @@ export declare class ProductService {
                     title: string;
                     code: string;
                 } | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 discount: number;
                 price: number;
@@ -452,17 +452,17 @@ export declare class ProductService {
                     id: number;
                 };
             } & {
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 productId: number;
                 star: number;
                 comment: string;
                 postedById: number;
             })[];
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             code: string;
@@ -520,9 +520,9 @@ export declare class ProductService {
                     title: string;
                     code: string;
                 } | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 discount: number;
                 price: number;
@@ -554,17 +554,17 @@ export declare class ProductService {
                     id: number;
                 };
             } & {
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 productId: number;
                 star: number;
                 comment: string;
                 postedById: number;
             })[];
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             code: string;

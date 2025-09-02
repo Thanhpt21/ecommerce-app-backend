@@ -11,9 +11,9 @@ export declare class BrandService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
         };
     }>;
@@ -22,9 +22,9 @@ export declare class BrandService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
         }[];
         total: number;
@@ -36,9 +36,9 @@ export declare class BrandService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
         }[];
         total: number;
@@ -48,9 +48,9 @@ export declare class BrandService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
         };
     }>;
@@ -59,9 +59,9 @@ export declare class BrandService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
         };
     }>;

@@ -8,9 +8,9 @@ export declare class ColorService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             code: string;
         };
@@ -19,9 +19,9 @@ export declare class ColorService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             code: string;
         }[];
@@ -33,9 +33,9 @@ export declare class ColorService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             code: string;
         }[];
@@ -45,9 +45,9 @@ export declare class ColorService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             code: string;
         };
@@ -56,9 +56,9 @@ export declare class ColorService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             code: string;
         };

@@ -21,34 +21,19 @@ async createOrder(@Body('orderId') orderId: number) { // ⭐ Bỏ @Body('pickUpA
   return { success: true, message: 'Đơn hàng đã được tạo trên GHTK.', ghtkOrderDetails };
 }
 
-  @Get('provinces')
+ @Get('provinces')
   async getProvinces() {
-    const provinces = await this.ghtkService.getProvinces();
-    return {
-      success: true,
-      message: 'Lấy danh sách tỉnh/thành công.',
-      data: provinces
-    };
+    return this.ghtkService.getProvincesOpenAPI();
   }
 
-  @Get('districts')
-  async getDistricts(@Query('provinceId', ParseIntPipe) provinceId: number) { // Sử dụng ParseIntPipe
-    const districts = await this.ghtkService.getDistricts(provinceId);
-    return {
-      success: true,
-      message: `Lấy danh sách quận/huyện cho tỉnh/thành ID ${provinceId} thành công.`,
-      data: districts
-    };
+  @Get('districts/:provinceCode')
+  async getDistricts(@Param('provinceCode') provinceCode: string) {
+    return this.ghtkService.getDistrictsOpenAPI(provinceCode);
   }
 
-  @Get('wards')
-  async getWards(@Query('districtId', ParseIntPipe) districtId: number) { // Sử dụng ParseIntPipe
-    const wards = await this.ghtkService.getWards(districtId);
-    return {
-      success: true,
-      message: `Lấy danh sách phường/xã cho quận/huyện ID ${districtId} thành công.`,
-      data: wards
-    };
+  @Get('wards/:districtCode')
+  async getWards(@Param('districtCode') districtCode: string) {
+    return this.ghtkService.getWardsOpenAPI(districtCode);
   }
 
 

@@ -24,14 +24,13 @@ let GhtkService = GhtkService_1 = class GhtkService {
     GHTK_BASE_API_URL;
     GHTK_API_TOKEN;
     GHTK_PARTNER_CODE;
+    openApiProvinces;
+    OPEN_API_PROVINCES_BASE_URL;
     GHTK_FEE_PATH = '/services/shipment/fee';
     GHTK_ORDER_PATH = '/services/shipment/order';
     GHTK_CANCEL_ORDER_PATH = '/services/shipment/cancel';
     GHTK_TRACKING_PATH = '/services/shipment/detail';
     GHTK_PRINT_LABEL_PATH = '/services/label';
-    GHTK_PUBLIC_PROVINCE_PATH = '/public/province';
-    GHTK_PUBLIC_DISTRICT_PATH = '/public/district';
-    GHTK_PUBLIC_WARD_PATH = '/public/ward';
     defaultPickupConfig = undefined;
     constructor(configService, prisma) {
         this.configService = configService;
@@ -65,6 +64,26 @@ let GhtkService = GhtkService_1 = class GhtkService {
             else {
                 this.logger.error(`GHTK API Request Error: ${error.message}`);
                 throw new common_1.InternalServerErrorException('Lỗi không xác định khi gửi yêu cầu đến GHTK API.');
+            }
+        });
+        this.OPEN_API_PROVINCES_BASE_URL = this.configService.get('OPEN_API_PROVINCES_BASE_URL') || 'https://provinces.open-api.vn/api';
+        this.openApiProvinces = axios_1.default.create({
+            baseURL: this.OPEN_API_PROVINCES_BASE_URL,
+            timeout: 30000,
+        });
+        this.openApiProvinces.interceptors.response.use((response) => response, (error) => {
+            if (axios_1.default.isAxiosError(error) && error.response) {
+                const errorMessage = error.response.data?.message || `Provinces Open API returned status ${error.response.status}`;
+                this.logger.error(`Provinces Open API Error [${error.response.status}]: ${JSON.stringify(error.response.data)}`);
+                throw new common_1.InternalServerErrorException(`Lỗi từ Provinces Open API: ${errorMessage}`);
+            }
+            else if (axios_1.default.isAxiosError(error) && error.request) {
+                this.logger.error(`Provinces Open API No Response: ${error.message}`);
+                throw new common_1.InternalServerErrorException('Không nhận được phản hồi từ Provinces Open API. Vui lòng thử lại sau.');
+            }
+            else {
+                this.logger.error(`Provinces Open API Request Error: ${error.message}`);
+                throw new common_1.InternalServerErrorException('Lỗi không xác định khi gửi yêu cầu đến Provinces Open API.');
             }
         });
         this.loadDefaultPickupConfig();
@@ -206,11 +225,6 @@ let GhtkService = GhtkService_1 = class GhtkService {
             }
             const weightInKg = itemWeightGram / 1000;
             const finalWeight = weightInKg > 0 ? weightInKg : 0.1;
-            let finalProductCode;
-            if (productCode !== null) {
-                const numCode = Number(productCode);
-                finalProductCode = !isNaN(numCode) ? numCode : productCode;
-            }
             return {
                 name: itemName,
                 weight: finalWeight,
@@ -286,37 +300,37 @@ let GhtkService = GhtkService_1 = class GhtkService {
             throw error;
         }
     }
-    async getProvinces() {
+    async getProvincesOpenAPI() {
         try {
-            const response = await this.sendGetRequest(this.GHTK_PUBLIC_PROVINCE_PATH);
-            if (response.success) {
-                return response.data;
-            }
-            throw new common_1.BadRequestException(response.message || 'Failed to fetch provinces from GHTK.');
+            this.logger.log('Fetching provinces from Provinces Open API...');
+            const response = await this.openApiProvinces.get('/p/');
+            return response.data;
         }
         catch (error) {
             throw error;
         }
     }
-    async getDistricts(provinceId) {
+    async getDistrictsOpenAPI(provinceCode) {
         try {
-            const response = await this.sendGetRequest(this.GHTK_PUBLIC_DISTRICT_PATH, { province: provinceId });
-            if (response.success) {
-                return response.data;
+            this.logger.log(`Fetching districts from Provinces Open API for province code: ${provinceCode}`);
+            const response = await this.openApiProvinces.get(`/p/${provinceCode}/?depth=2`);
+            if (response.data && response.data.districts) {
+                return response.data.districts;
             }
-            throw new common_1.BadRequestException(response.message || 'Failed to fetch districts from GHTK.');
+            throw new common_1.NotFoundException(`Không tìm thấy quận/huyện cho tỉnh/thành có mã ${provinceCode}.`);
         }
         catch (error) {
             throw error;
         }
     }
-    async getWards(districtId) {
+    async getWardsOpenAPI(districtCode) {
         try {
-            const response = await this.sendGetRequest(this.GHTK_PUBLIC_WARD_PATH, { district: districtId });
-            if (response.success) {
-                return response.data;
+            this.logger.log(`Fetching wards from Provinces Open API for district code: ${districtCode}`);
+            const response = await this.openApiProvinces.get(`/d/${districtCode}/?depth=2`);
+            if (response.data && response.data.wards) {
+                return response.data.wards;
             }
-            throw new common_1.BadRequestException(response.message || 'Failed to fetch wards from GHTK.');
+            throw new common_1.NotFoundException(`Không tìm thấy phường/xã cho quận/huyện có mã ${districtCode}.`);
         }
         catch (error) {
             throw error;

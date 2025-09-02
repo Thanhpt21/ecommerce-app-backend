@@ -5,15 +5,41 @@ import { CalculateFeeDto, CreateOrderGHTKDto, GHTKPickOption, GHTKDeliverOption,
 import {
   GHTKShipFeeResponse,
   GHTKCreateOrderResponse,
-  GHTKProvinceResponse,
-  GHTKDistrictResponse,
-  GHTKWardResponse,
   GHTKTrackingResponse,
   GHTKCancelOrderResponse,
   GHTKOrderRequestData,
   GHTKCreateOrderPayload
 } from './interfaces/ghtk.interface';
 import { PrismaService } from 'prisma/prisma.service'; // Adjust path if needed
+
+export interface ProvinceOpenAPI {
+  code: string;
+  name: string;
+  codename: string;
+  division_type: string;
+  phone_code: number;
+  districts?: DistrictOpenAPI[]; // Chỉ có khi depth=2
+}
+
+export interface DistrictOpenAPI {
+  code: string;
+  name: string;
+  codename: string;
+  division_type: string;
+  short_codename: string;
+  province_code: string;
+  wards?: WardOpenAPI[]; // Chỉ có khi depth=2
+}
+
+export interface WardOpenAPI {
+  code: string;
+  name: string;
+  codename: string;
+  division_type: string;
+  short_codename: string;
+  district_code: string;
+}
+
 
 @Injectable()
 export class GhtkService {
@@ -23,14 +49,16 @@ export class GhtkService {
   private readonly GHTK_API_TOKEN: string;
   private readonly GHTK_PARTNER_CODE: string;
 
+  private openApiProvinces: AxiosInstance;
+  private readonly OPEN_API_PROVINCES_BASE_URL: string;
+
   private readonly GHTK_FEE_PATH = '/services/shipment/fee';
   private readonly GHTK_ORDER_PATH = '/services/shipment/order';
   private readonly GHTK_CANCEL_ORDER_PATH = '/services/shipment/cancel';
   private readonly GHTK_TRACKING_PATH = '/services/shipment/detail';
   private readonly GHTK_PRINT_LABEL_PATH = '/services/label';
-  private readonly GHTK_PUBLIC_PROVINCE_PATH = '/public/province';
-  private readonly GHTK_PUBLIC_DISTRICT_PATH = '/public/district';
-  private readonly GHTK_PUBLIC_WARD_PATH = '/public/ward';
+
+
 
   private defaultPickupConfig: {
     pick_province: string | null;
@@ -48,6 +76,7 @@ export class GhtkService {
     this.GHTK_BASE_API_URL = this.configService.get<string>('GHTK_BASE_API_URL') || 'https://services.giaohangtietkiem.vn';
     this.GHTK_API_TOKEN = this.configService.get<string>('GHTK_API_TOKEN')!;
     this.GHTK_PARTNER_CODE = this.configService.get<string>('GHTK_PARTNER_CODE')!;
+
 
     if (!this.GHTK_API_TOKEN || !this.GHTK_PARTNER_CODE || !this.GHTK_BASE_API_URL) {
       this.logger.error('GHTK API credentials (token, base URL, partner code) are not fully set in environment variables.');
@@ -80,6 +109,35 @@ export class GhtkService {
         }
       }
     );
+
+
+     // --- ⭐ New: Khởi tạo Axios cho provinces.open-api.vn ⭐ ---
+    this.OPEN_API_PROVINCES_BASE_URL = this.configService.get<string>('OPEN_API_PROVINCES_BASE_URL') || 'https://provinces.open-api.vn/api';
+
+    // API này không cần token
+    this.openApiProvinces = axios.create({
+      baseURL: this.OPEN_API_PROVINCES_BASE_URL,
+      timeout: 30000, // 30 seconds timeout
+    });
+
+    // Thêm interceptor cho API này để xử lý lỗi riêng (tùy chọn)
+    this.openApiProvinces.interceptors.response.use(
+        (response) => response,
+        (error) => {
+            if (axios.isAxiosError(error) && error.response) {
+                const errorMessage = error.response.data?.message || `Provinces Open API returned status ${error.response.status}`;
+                this.logger.error(`Provinces Open API Error [${error.response.status}]: ${JSON.stringify(error.response.data)}`);
+                throw new InternalServerErrorException(`Lỗi từ Provinces Open API: ${errorMessage}`);
+            } else if (axios.isAxiosError(error) && error.request) {
+                this.logger.error(`Provinces Open API No Response: ${error.message}`);
+                throw new InternalServerErrorException('Không nhận được phản hồi từ Provinces Open API. Vui lòng thử lại sau.');
+            } else {
+                this.logger.error(`Provinces Open API Request Error: ${error.message}`);
+                throw new InternalServerErrorException('Lỗi không xác định khi gửi yêu cầu đến Provinces Open API.');
+            }
+        }
+    );
+
 
     // ⭐ Load default pickup config on service initialization ⭐
     this.loadDefaultPickupConfig();
@@ -347,47 +405,40 @@ export class GhtkService {
         }
     }
 
-  // --- 3. Lấy danh sách Tỉnh/Thành ---
-  async getProvinces(): Promise<GHTKProvinceResponse['data']> { // Removed | null
+   async getProvincesOpenAPI(): Promise<ProvinceOpenAPI[]> {
     try {
-      const response = await this.sendGetRequest<GHTKProvinceResponse>(this.GHTK_PUBLIC_PROVINCE_PATH);
-      if (response.success) {
-        return response.data;
+      this.logger.log('Fetching provinces from Provinces Open API...');
+      const response: AxiosResponse<ProvinceOpenAPI[]> = await this.openApiProvinces.get('/p/');
+      return response.data;
+    } catch (error) {
+      // Interceptor đã xử lý lỗi, chỉ cần re-throw
+      throw error;
+    }
+  }
+
+  async getDistrictsOpenAPI(provinceCode: string): Promise<DistrictOpenAPI[]> {
+    try {
+      this.logger.log(`Fetching districts from Provinces Open API for province code: ${provinceCode}`);
+      // Sử dụng depth=2 để nhận luôn danh sách quận/huyện kèm theo
+      const response: AxiosResponse<ProvinceOpenAPI> = await this.openApiProvinces.get(`/p/${provinceCode}/?depth=2`);
+      if (response.data && response.data.districts) {
+        return response.data.districts;
       }
-      // If success is false but no HTTP error, still throw BadRequest
-      throw new BadRequestException(response.message || 'Failed to fetch provinces from GHTK.');
+      throw new NotFoundException(`Không tìm thấy quận/huyện cho tỉnh/thành có mã ${provinceCode}.`);
     } catch (error) {
       throw error;
     }
   }
 
-  // --- 4. Lấy danh sách Quận/Huyện theo Tỉnh/Thành ---
-  async getDistricts(provinceId: number): Promise<GHTKDistrictResponse['data']> { // Removed | null
+  async getWardsOpenAPI(districtCode: string): Promise<WardOpenAPI[]> {
     try {
-      const response = await this.sendGetRequest<GHTKDistrictResponse>(
-        this.GHTK_PUBLIC_DISTRICT_PATH,
-        { province: provinceId }
-      );
-      if (response.success) {
-        return response.data;
+      this.logger.log(`Fetching wards from Provinces Open API for district code: ${districtCode}`);
+      // Sử dụng depth=2 để nhận luôn danh sách phường/xã kèm theo
+      const response: AxiosResponse<DistrictOpenAPI> = await this.openApiProvinces.get(`/d/${districtCode}/?depth=2`);
+      if (response.data && response.data.wards) {
+        return response.data.wards;
       }
-      throw new BadRequestException(response.message || 'Failed to fetch districts from GHTK.');
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  // --- 5. Lấy danh sách Phường/Xã theo Quận/Huyện ---
-  async getWards(districtId: number): Promise<GHTKWardResponse['data']> { // Removed | null
-    try {
-      const response = await this.sendGetRequest<GHTKWardResponse>(
-        this.GHTK_PUBLIC_WARD_PATH,
-        { district: districtId }
-      );
-      if (response.success) {
-        return response.data;
-      }
-      throw new BadRequestException(response.message || 'Failed to fetch wards from GHTK.');
+      throw new NotFoundException(`Không tìm thấy phường/xã cho quận/huyện có mã ${districtCode}.`);
     } catch (error) {
       throw error;
     }

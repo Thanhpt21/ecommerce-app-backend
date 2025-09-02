@@ -12,9 +12,9 @@ export declare class StoreService {
         data: {
             name: string;
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             link: string;
             mobile: string;
             address: string;
@@ -27,9 +27,9 @@ export declare class StoreService {
         data: {
             name: string;
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             link: string;
             mobile: string;
             address: string;
@@ -45,9 +45,9 @@ export declare class StoreService {
         data: {
             name: string;
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             link: string;
             mobile: string;
             address: string;
@@ -60,9 +60,9 @@ export declare class StoreService {
         data: {
             name: string;
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             link: string;
             mobile: string;
             address: string;

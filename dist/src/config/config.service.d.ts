@@ -13,9 +13,9 @@ export declare class ConfigService {
             facebook: string | null;
             name: string | null;
             email: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             mobile: string | null;
             address: string | null;
             googlemap: string | null;
@@ -41,9 +41,9 @@ export declare class ConfigService {
             facebook: string | null;
             name: string | null;
             email: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             mobile: string | null;
             address: string | null;
             googlemap: string | null;
@@ -69,9 +69,9 @@ export declare class ConfigService {
             facebook: string | null;
             name: string | null;
             email: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             mobile: string | null;
             address: string | null;
             googlemap: string | null;

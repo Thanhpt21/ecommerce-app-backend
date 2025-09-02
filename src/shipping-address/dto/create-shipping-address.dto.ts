@@ -31,20 +31,6 @@ export class CreateShippingAddressDto {
   @IsOptional()
   province?: string; 
 
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number) // ⭐ Thêm trường wardId và Type conversion ⭐
-  wardId?: number;
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number) // ⭐ Thêm trường districtId và Type conversion ⭐
-  districtId?: number;
-
-  @IsInt()
-  @IsOptional()
-  @Type(() => Number) // ⭐ Thêm trường provinceId và Type conversion ⭐
-  provinceId?: number;
 
   @IsBoolean()
   @IsOptional()

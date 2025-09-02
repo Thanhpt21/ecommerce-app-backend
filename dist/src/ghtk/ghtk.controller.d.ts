@@ -22,32 +22,9 @@ export declare class GhtkController {
             tracking_link: string;
         } | undefined;
     }>;
-    getProvinces(): Promise<{
-        success: boolean;
-        message: string;
-        data: {
-            ProvinceID: number;
-            ProvinceName: string;
-        }[];
-    }>;
-    getDistricts(provinceId: number): Promise<{
-        success: boolean;
-        message: string;
-        data: {
-            DistrictID: number;
-            DistrictName: string;
-            ProvinceID: number;
-        }[];
-    }>;
-    getWards(districtId: number): Promise<{
-        success: boolean;
-        message: string;
-        data: {
-            WardID: number;
-            WardName: string;
-            DistrictID: number;
-        }[];
-    }>;
+    getProvinces(): Promise<import("./ghtk.service").ProvinceOpenAPI[]>;
+    getDistricts(provinceCode: string): Promise<import("./ghtk.service").DistrictOpenAPI[]>;
+    getWards(districtCode: string): Promise<import("./ghtk.service").WardOpenAPI[]>;
     cancelOrder(ghtkLabel: string): Promise<{
         success: boolean;
         message: string;

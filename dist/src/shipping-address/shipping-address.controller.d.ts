@@ -8,9 +8,9 @@ export declare class ShippingAddressController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             address: string;
             userId: number;
             fullName: string;
@@ -18,9 +18,6 @@ export declare class ShippingAddressController {
             ward: string | null;
             district: string | null;
             province: string | null;
-            wardId: number | null;
-            districtId: number | null;
-            provinceId: number | null;
             isDefault: boolean;
         };
     }>;
@@ -28,9 +25,9 @@ export declare class ShippingAddressController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             address: string;
             userId: number;
             fullName: string;
@@ -38,9 +35,6 @@ export declare class ShippingAddressController {
             ward: string | null;
             district: string | null;
             province: string | null;
-            wardId: number | null;
-            districtId: number | null;
-            provinceId: number | null;
             isDefault: boolean;
         }[];
     }>;
@@ -48,9 +42,9 @@ export declare class ShippingAddressController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             address: string;
             userId: number;
             fullName: string;
@@ -58,9 +52,6 @@ export declare class ShippingAddressController {
             ward: string | null;
             district: string | null;
             province: string | null;
-            wardId: number | null;
-            districtId: number | null;
-            provinceId: number | null;
             isDefault: boolean;
         }[];
     }>;
@@ -68,9 +59,9 @@ export declare class ShippingAddressController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             address: string;
             userId: number;
             fullName: string;
@@ -78,9 +69,6 @@ export declare class ShippingAddressController {
             ward: string | null;
             district: string | null;
             province: string | null;
-            wardId: number | null;
-            districtId: number | null;
-            provinceId: number | null;
             isDefault: boolean;
         };
     }>;

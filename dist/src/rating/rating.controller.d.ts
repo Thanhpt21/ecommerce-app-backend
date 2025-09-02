@@ -9,9 +9,9 @@ export declare class RatingController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             productId: number;
             star: number;
             comment: string;
@@ -22,9 +22,9 @@ export declare class RatingController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             productId: number;
             star: number;
             comment: string;
@@ -46,9 +46,9 @@ export declare class RatingController {
                 id: number;
             };
         } & {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             productId: number;
             star: number;
             comment: string;
@@ -66,9 +66,9 @@ export declare class RatingController {
             id: number;
         };
     } & {
-        id: number;
         createdAt: Date;
         updatedAt: Date;
+        id: number;
         productId: number;
         star: number;
         comment: string;

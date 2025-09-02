@@ -8,9 +8,9 @@ export declare class ShippingController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             provinceName: string;
             fee: number;
         };
@@ -19,9 +19,9 @@ export declare class ShippingController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             provinceName: string;
             fee: number;
         }[];
@@ -33,9 +33,9 @@ export declare class ShippingController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             provinceName: string;
             fee: number;
         }[];
@@ -44,9 +44,9 @@ export declare class ShippingController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             provinceName: string;
             fee: number;
         };
@@ -55,9 +55,9 @@ export declare class ShippingController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             provinceName: string;
             fee: number;
         };

@@ -9,9 +9,9 @@ export declare class BlogCategoryController {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
         };
@@ -21,9 +21,9 @@ export declare class BlogCategoryController {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
         }[];
@@ -36,9 +36,9 @@ export declare class BlogCategoryController {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
         }[];
@@ -48,9 +48,9 @@ export declare class BlogCategoryController {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
         };
@@ -60,9 +60,9 @@ export declare class BlogCategoryController {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
         };

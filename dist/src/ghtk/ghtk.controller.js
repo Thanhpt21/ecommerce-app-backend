@@ -31,28 +31,13 @@ let GhtkController = class GhtkController {
         return { success: true, message: 'Đơn hàng đã được tạo trên GHTK.', ghtkOrderDetails };
     }
     async getProvinces() {
-        const provinces = await this.ghtkService.getProvinces();
-        return {
-            success: true,
-            message: 'Lấy danh sách tỉnh/thành công.',
-            data: provinces
-        };
+        return this.ghtkService.getProvincesOpenAPI();
     }
-    async getDistricts(provinceId) {
-        const districts = await this.ghtkService.getDistricts(provinceId);
-        return {
-            success: true,
-            message: `Lấy danh sách quận/huyện cho tỉnh/thành ID ${provinceId} thành công.`,
-            data: districts
-        };
+    async getDistricts(provinceCode) {
+        return this.ghtkService.getDistrictsOpenAPI(provinceCode);
     }
-    async getWards(districtId) {
-        const wards = await this.ghtkService.getWards(districtId);
-        return {
-            success: true,
-            message: `Lấy danh sách phường/xã cho quận/huyện ID ${districtId} thành công.`,
-            data: wards
-        };
+    async getWards(districtCode) {
+        return this.ghtkService.getWardsOpenAPI(districtCode);
     }
     async cancelOrder(ghtkLabel) {
         const result = await this.ghtkService.cancelGHTKOrder(ghtkLabel);
@@ -102,17 +87,17 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], GhtkController.prototype, "getProvinces", null);
 __decorate([
-    (0, common_1.Get)('districts'),
-    __param(0, (0, common_1.Query)('provinceId', common_1.ParseIntPipe)),
+    (0, common_1.Get)('districts/:provinceCode'),
+    __param(0, (0, common_1.Param)('provinceCode')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], GhtkController.prototype, "getDistricts", null);
 __decorate([
-    (0, common_1.Get)('wards'),
-    __param(0, (0, common_1.Query)('districtId', common_1.ParseIntPipe)),
+    (0, common_1.Get)('wards/:districtCode'),
+    __param(0, (0, common_1.Param)('districtCode')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], GhtkController.prototype, "getWards", null);
 __decorate([

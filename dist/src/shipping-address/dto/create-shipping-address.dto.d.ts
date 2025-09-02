@@ -6,8 +6,5 @@ export declare class CreateShippingAddressDto {
     ward?: string;
     district?: string;
     province?: string;
-    wardId?: number;
-    districtId?: number;
-    provinceId?: number;
     isDefault?: boolean;
 }

@@ -9,9 +9,9 @@ export declare class CouponController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             expiresAt: Date;
             title: string;
             code: string;
@@ -25,9 +25,9 @@ export declare class CouponController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             expiresAt: Date;
             title: string;
             code: string;
@@ -44,9 +44,9 @@ export declare class CouponController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             expiresAt: Date;
             title: string;
             code: string;
@@ -60,9 +60,9 @@ export declare class CouponController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             expiresAt: Date;
             title: string;
             code: string;

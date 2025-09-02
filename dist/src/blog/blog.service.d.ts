@@ -11,9 +11,9 @@ export declare class BlogService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             description: string;
@@ -42,9 +42,9 @@ export declare class BlogService {
                 id: number;
             } | null;
         } & {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             description: string;
@@ -76,9 +76,9 @@ export declare class BlogService {
                 id: number;
             } | null;
         } & {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             description: string;
@@ -117,9 +117,9 @@ export declare class BlogService {
                 profilePicture: string | null;
                 id: number;
             } | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             description: string;
@@ -134,9 +134,9 @@ export declare class BlogService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             description: string;

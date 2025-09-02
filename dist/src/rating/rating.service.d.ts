@@ -9,9 +9,9 @@ export declare class RatingService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             productId: number;
             star: number;
             comment: string;
@@ -22,9 +22,9 @@ export declare class RatingService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             productId: number;
             star: number;
             comment: string;
@@ -47,9 +47,9 @@ export declare class RatingService {
                 id: number;
             };
         } & {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             productId: number;
             star: number;
             comment: string;
@@ -67,9 +67,9 @@ export declare class RatingService {
             id: number;
         };
     } & {
-        id: number;
         createdAt: Date;
         updatedAt: Date;
+        id: number;
         productId: number;
         star: number;
         comment: string;

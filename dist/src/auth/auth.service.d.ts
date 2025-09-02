@@ -22,10 +22,10 @@ export declare class AuthService {
         gender: string | null;
         isActive: boolean;
         type_account: string;
-        id: number;
         profilePicturePublicId: string | null;
         createdAt: Date;
         updatedAt: Date;
+        id: number;
     }>;
     login(user: any): Promise<{
         success: boolean;

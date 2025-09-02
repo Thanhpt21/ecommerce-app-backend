@@ -283,16 +283,9 @@ model ShippingAddress {
   phone       String
   address     String // Địa chỉ cụ thể (VD: 123 Đường ABC)
 
-  // ⭐ Đổi tên các trường để phản ánh rõ ràng hơn đây là tên địa điểm
   ward    String? // Tên Phường/xã (VD: "Phường Bến Nghé")
   district String? // Tên Quận/huyện (VD: "Quận 1")
   province String? // Tên Tỉnh/thành (VD: "TP Hồ Chí Minh")
-
-  // ⭐ Cân nhắc thêm ID của địa chỉ từ GHTK để đồng bộ tốt hơn
-  // Điều này giúp bạn tránh các lỗi về tên không khớp với GHTK sau này
-  wardId      Int?    // ID Phường/xã từ GHTK (nếu có, VD: GHTK Ward ID)
-  districtId  Int?    // ID Quận/huyện từ GHTK
-  provinceId  Int?    // ID Tỉnh/thành từ GHTK
 
   isDefault   Boolean @default(false)
 

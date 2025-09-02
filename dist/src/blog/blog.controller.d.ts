@@ -8,9 +8,9 @@ export declare class BlogController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             description: string;
@@ -39,9 +39,9 @@ export declare class BlogController {
                 id: number;
             } | null;
         } & {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             description: string;
@@ -73,9 +73,9 @@ export declare class BlogController {
                 id: number;
             } | null;
         } & {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             description: string;
@@ -114,9 +114,9 @@ export declare class BlogController {
                 profilePicture: string | null;
                 id: number;
             } | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             description: string;
@@ -131,9 +131,9 @@ export declare class BlogController {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             description: string;

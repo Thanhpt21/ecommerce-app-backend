@@ -29,10 +29,10 @@ export declare class UsersService {
             gender: string | null;
             isActive: boolean;
             type_account: string;
-            id: number;
             profilePicturePublicId: string | null;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
         };
     }>;
     getUsers(page?: number, limit?: number, search?: string): Promise<{
@@ -53,10 +53,10 @@ export declare class UsersService {
         gender: string | null;
         isActive: boolean;
         type_account: string;
-        id: number;
         profilePicturePublicId: string | null;
         createdAt: Date;
         updatedAt: Date;
+        id: number;
     }>;
     updateUser(id: number, data: UpdateUserDto, file?: Express.Multer.File): Promise<{
         success: boolean;
@@ -77,9 +77,9 @@ export declare class UsersService {
         gender: string | null;
         isActive: boolean;
         type_account: string;
-        id: number;
         profilePicturePublicId: string | null;
         createdAt: Date;
         updatedAt: Date;
+        id: number;
     } | null>;
 }

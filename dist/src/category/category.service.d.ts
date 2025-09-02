@@ -11,9 +11,9 @@ export declare class CategoryService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             parentId: number | null;
@@ -25,18 +25,18 @@ export declare class CategoryService {
         data: ({
             subCategories: {
                 image: string | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 slug: string;
                 parentId: number | null;
             }[];
         } & {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             parentId: number | null;
@@ -51,18 +51,18 @@ export declare class CategoryService {
         data: ({
             subCategories: {
                 image: string | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 slug: string;
                 parentId: number | null;
             }[];
         } & {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             parentId: number | null;
@@ -75,18 +75,18 @@ export declare class CategoryService {
         data: {
             subCategories: {
                 image: string | null;
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 slug: string;
                 parentId: number | null;
             }[];
         } & {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             parentId: number | null;
@@ -97,9 +97,9 @@ export declare class CategoryService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
             parentId: number | null;

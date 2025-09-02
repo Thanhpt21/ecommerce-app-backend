@@ -19,10 +19,10 @@ export declare class UsersController {
             gender: string | null;
             isActive: boolean;
             type_account: string;
-            id: number;
             profilePicturePublicId: string | null;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
         };
     }>;
     getUsers(page?: number, limit?: number, search?: string): Promise<{
@@ -43,10 +43,10 @@ export declare class UsersController {
         gender: string | null;
         isActive: boolean;
         type_account: string;
-        id: number;
         profilePicturePublicId: string | null;
         createdAt: Date;
         updatedAt: Date;
+        id: number;
     }>;
     updateUser(id: string, updateUserDto: UpdateUserDto, file?: Express.Multer.File): Promise<{
         success: boolean;

@@ -15,17 +15,17 @@ export declare class VariantService {
         message: string;
         data: ({
             color: {
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 code: string;
             } | null;
             sizes: ({
                 size: {
-                    id: number;
                     createdAt: Date;
                     updatedAt: Date;
+                    id: number;
                     title: string;
                 };
             } & {
@@ -34,9 +34,9 @@ export declare class VariantService {
                 variantId: number;
             })[];
         } & {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             discount: number;
             price: number;
@@ -62,15 +62,15 @@ export declare class VariantService {
                 updatedAt: Date;
             }[];
             color: {
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 code: string;
             } | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             discount: number;
             price: number;
@@ -94,9 +94,9 @@ export declare class VariantService {
                 title: string;
                 code: string;
             } | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             discount: number;
             price: number;
@@ -117,9 +117,9 @@ export declare class VariantService {
                 id: number;
                 title: string;
             }[];
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             discount: number;
             price: number;

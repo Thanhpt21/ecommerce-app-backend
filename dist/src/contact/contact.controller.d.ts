@@ -10,9 +10,9 @@ export declare class ContactController {
         data: {
             name: string;
             email: string;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             mobile: string | null;
             status: string;
             comment: string;
@@ -25,9 +25,9 @@ export declare class ContactController {
         data: {
             name: string;
             email: string;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             mobile: string | null;
             status: string;
             comment: string;
@@ -43,9 +43,9 @@ export declare class ContactController {
         data: {
             name: string;
             email: string;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             mobile: string | null;
             status: string;
             comment: string;
@@ -59,9 +59,9 @@ export declare class ContactController {
         data: {
             name: string;
             email: string;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             mobile: string | null;
             status: string;
             comment: string;
@@ -74,9 +74,9 @@ export declare class ContactController {
         data: {
             name: string;
             email: string;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             mobile: string | null;
             status: string;
             comment: string;

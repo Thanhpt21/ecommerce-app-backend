@@ -12,17 +12,17 @@ export declare class VariantController {
         message: string;
         data: ({
             color: {
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 code: string;
             } | null;
             sizes: ({
                 size: {
-                    id: number;
                     createdAt: Date;
                     updatedAt: Date;
+                    id: number;
                     title: string;
                 };
             } & {
@@ -31,9 +31,9 @@ export declare class VariantController {
                 variantId: number;
             })[];
         } & {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             discount: number;
             price: number;
@@ -57,9 +57,9 @@ export declare class VariantController {
                 title: string;
                 code: string;
             } | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             discount: number;
             price: number;
@@ -80,9 +80,9 @@ export declare class VariantController {
                 id: number;
                 title: string;
             }[];
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             discount: number;
             price: number;
@@ -111,15 +111,15 @@ export declare class VariantController {
                 updatedAt: Date;
             }[];
             color: {
-                id: number;
                 createdAt: Date;
                 updatedAt: Date;
+                id: number;
                 title: string;
                 code: string;
             } | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             discount: number;
             price: number;

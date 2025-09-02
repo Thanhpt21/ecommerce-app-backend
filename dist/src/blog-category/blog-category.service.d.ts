@@ -11,9 +11,9 @@ export declare class BlogCategoryService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
         };
@@ -23,9 +23,9 @@ export declare class BlogCategoryService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
         }[];
@@ -38,9 +38,9 @@ export declare class BlogCategoryService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
         }[];
@@ -50,9 +50,9 @@ export declare class BlogCategoryService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
         };
@@ -62,9 +62,9 @@ export declare class BlogCategoryService {
         message: string;
         data: {
             image: string | null;
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
             slug: string;
         };

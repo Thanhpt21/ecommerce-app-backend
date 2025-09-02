@@ -8,9 +8,9 @@ export declare class SizeService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
         };
     }>;
@@ -18,9 +18,9 @@ export declare class SizeService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
         }[];
         total: number;
@@ -31,9 +31,9 @@ export declare class SizeService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
         }[];
         total: number;
@@ -42,9 +42,9 @@ export declare class SizeService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
         };
     }>;
@@ -52,9 +52,9 @@ export declare class SizeService {
         success: boolean;
         message: string;
         data: {
-            id: number;
             createdAt: Date;
             updatedAt: Date;
+            id: number;
             title: string;
         };
     }>;

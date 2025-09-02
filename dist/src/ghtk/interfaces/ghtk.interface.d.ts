@@ -77,32 +77,6 @@ export interface GHTKShipFeeResponse {
     };
     reason?: string;
 }
-export interface GHTKProvinceResponse {
-    success: boolean;
-    message?: string;
-    data: {
-        ProvinceID: number;
-        ProvinceName: string;
-    }[];
-}
-export interface GHTKDistrictResponse {
-    success: boolean;
-    message?: string;
-    data: {
-        DistrictID: number;
-        DistrictName: string;
-        ProvinceID: number;
-    }[];
-}
-export interface GHTKWardResponse {
-    success: boolean;
-    message?: string;
-    data: {
-        WardID: number;
-        WardName: string;
-        DistrictID: number;
-    }[];
-}
 export interface GHTKTrackingResponse {
     success: boolean;
     message?: string;
@@ -113,4 +87,29 @@ export interface GHTKTrackingResponse {
         status_text: string;
     };
     reason?: string;
+}
+export interface GHTKBaseResponse<T> {
+    success: boolean;
+    message?: string;
+    data: T;
+}
+export interface GHTKProvince {
+    ProvinceID: number;
+    ProvinceName: string;
+}
+export interface GHTKDistrict {
+    DistrictID: number;
+    ProvinceID: number;
+    DistrictName: string;
+}
+export interface GHTKWard {
+    WardCode: string;
+    DistrictID: number;
+    WardName: string;
+}
+export interface GHTKProvinceResponse extends GHTKBaseResponse<GHTKProvince[]> {
+}
+export interface GHTKDistrictResponse extends GHTKBaseResponse<GHTKDistrict[]> {
+}
+export interface GHTKWardResponse extends GHTKBaseResponse<GHTKWard[]> {
 }
